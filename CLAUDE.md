@@ -15,21 +15,25 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 ## Layout
 
 - **Top level:** the active pipeline (experiment scripts, envs, analysis and sweep scripts, notebooks) plus model and shape inputs.
+- **Surrogate copies:** `Surrogate modeling/` (training data and notebook) and `FuselageActuators/Surrogates/` hold byte-identical copies of `surrogate_likeDu_v22.joblib`. The scripts load the root copy.
 - **`figures/`:** generated plots and their CSVs. The compare scripts and `analyze_discrete.ipynb` write here.
 - **`legacy/`:** superseded, broken, or one-off code, listed in `legacy/README.md`. Nothing at the top level imports from it. To run a legacy script, use `PYTHONPATH=. python legacy/<script>.py` from the root.
 - **Origin:** this folder is a clean clone of the original working folder `/data/liuj35/quan_fuselage`, which is the git remote `original`. That folder still holds the ~8 GB of continuous results and the `.history/` editor snapshots.
 
 ## Gotchas
 
-- **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. Before a smoke test, copy the output dir aside; continuous scripts also accept `--results_root`.
+- **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. The discrete `.pth` files are tracked, so `git checkout -- Experiments_constraints/` restores them after a smoke test; continuous scripts accept `--results_root`.
 - **Run from the repo root.** Surrogates, `FuselageActuators/{AnsysFiles,Shapes}/Test/`, and result dirs resolve relative to CWD. The exception is `simulation_study/`, which must run from inside that directory.
-- **Filenames embed `str(obs_noise)`.** The default `0.1**2` produces `0.010000000000000002…`, but `--obs_noise 0.01` produces `0.01…`. To match existing files, omit the flag or pass the exact repr (`0.010000000000000002`, `0.04000000000000001`).
+- **Filenames embed `str(obs_noise)`.** The default `0.1**2` produces `0.010000000000000002…`, but `--obs_noise 0.01` produces `0.01…`. To match existing files, omit the flag or pass the exact repr (`0.010000000000000002`, `0.04000000000000001`). `Classic_Discrete_Unconstrained/` was run with `--obs_noise 0.01`, so its σ = 0.1 files carry the short `0.01` prefix and a glob for `0.010000000000000002*` misses them.
 - **Git scope.** Of the `Experiments*` entries at the root (dirs or symlinks), `.gitignore` lets through only `Experiments_constraints/**/*.pth`. Figures, CSVs, sweep JSONs and `simulation_study/` caches are tracked. The continuous results live only in the original folder.
   - To analyze them here, point `compare_actuator_count_cumulative_regret.py` at them with `--root-4/6/8`, or symlink the dirs into the root; `compare_force_range_cumulative_regret.py` has hardcoded roots.
   - Never `git add -f` them.
 - **`run_force_range_experiments.sh`** sources a nonexistent `/opt/conda/...`, so activate `quantum` before running it.
 - **`reset()` return order differs.** The classical env returns `(file, error_init)`; the quantum env returns `(error_init, file)`. `classic_safeset_continuous.py` and `classic_bo_unconstrained.py` unpack it backwards, so their saved `error_init` is a filename string.
 - **Forces accumulate in the env.** Scripts call `env.reset(...)` after every evaluation; keep that when adding code paths.
+- **`classic_acl_discrete.py` samples differently.** Its `--method` defaults to `non_monte_carlo`, which ignores ε_t and draws a fixed n = ⌈obs_noise/(eps_max²·0.05)⌉ (at least `min_shots`) per query: 500 at σ = 0.2 and 125 at σ = 0.1. Only its warmup helper uses `chebyshev`.
+- **Continuous defaults differ per script.** `--actuator_count` defaults to 8 in `classic_safeset_continuous.py` and `classic_bo_unconstrained.py` but 6 in the quantum and ACL scripts, and `classic_bo_unconstrained.py` defaults to `obs_noise 0.2**2` where every other continuous script uses `0.1**2`. Pass both flags explicitly for comparable runs.
+- **`compare_cumulative_regret.ipynb` is stale.** It reads `exp_set_0` dirs that don't exist for the Real and ACL results and writes PNGs to the root. Use `analyze_discrete.ipynb`.
 
 ## Environment
 
@@ -38,7 +42,8 @@ conda activate quantum
 ```
 
 - **Versions (Python 3.8):** torch 2.0.0, botorch 0.8.5, gpytorch 1.10, scikit-learn 1.2.0, qiskit 1.2.4, qiskit-aer 0.17.2, qiskit-algorithms 0.3.1, qiskit-finance 0.4.1, qiskit-ibm-runtime 0.34.0. `requirements.txt` (qiskit 0.44 pins) is stale.
-- **Patched gpytorch:** the scripts call `RFFKernel.get_features`, which stock gpytorch 1.10 lacks. It is added in the user-site copy `~/.local/lib/python3.8/site-packages/gpytorch/kernels/rff_kernel.py`, which shadows the conda env's gpytorch. On a new machine, add this method to `RFFKernel`:
+- **Two envs:** `quantum` is the working env. `quantum_fresh` has the same pins but an unpatched gpytorch, so the RFF scripts fail there until the method below is added.
+- **Patched gpytorch:** the scripts call `RFFKernel.get_features`, which stock gpytorch 1.10 lacks. It is added in the user-site copy `~/.local/lib/python3.8/site-packages/gpytorch/kernels/rff_kernel.py`, which shadows the conda env's gpytorch. That user site also supplies scikit-learn 1.2.0, numpy 1.23.4, joblib and pandas (the conda env itself has scikit-learn 1.3.0, numpy 1.24.3 and no pandas), so never run with `python -s` or `PYTHONNOUSERSITE=1`. On a new machine, add this method to `RFFKernel`:
   ```python
   def get_features(self, x, num_dims, normalize=False):
       if not hasattr(self, "randn_weights"):
@@ -46,7 +51,14 @@ conda activate quantum
       return self._featurize(x, normalize=normalize)
   ```
 - **`ansys.mapdl`:** the env modules import it at the top level, so it must be installed. MAPDL launches are commented out and the envs run surrogate-only.
-- **No tests or build:** there is no test suite, linter or build. Check syntax with `python -m py_compile <file>`; check behavior with a small `--query_budget` run, after backing up the output dir.
+- **Expected warning:** the joblib surrogates were pickled with scikit-learn 1.1.1, so loading them in a fresh interpreter prints version-mismatch warnings. They are harmless.
+- **GPUs:** this machine has four RTX A5000s. The discrete scripts use `cuda:0` when available and the CPU otherwise; the continuous scripts assign trial `i` to GPU `i % device_count`. Use `CUDA_VISIBLE_DEVICES` to choose GPUs.
+- **No tests or build:** there is no test suite, linter or build. Check syntax with `python -m py_compile <file>`. Smoke-test a discrete script with a small budget, then restore the tracked results it overwrote (all 5 trials take about 10 s classical and 20 s quantum, with warmup plus one to four steps each):
+  ```bash
+  python classic_safeset_discrete.py --query_budget 300
+  git checkout -- Experiments_constraints/
+  ```
+  For the continuous scripts pass `--results_root <scratch dir>` instead. `simulation_study/_smoke_compare.py` is the benchmark's smoke test.
 
 ## Running Experiments
 
@@ -137,7 +149,10 @@ The unconstrained scripts share seeds, shape lists and the safe init with their 
 - `analyze_discrete.ipynb`: the discrete analysis; metrics are defined in `analyze_discrete_README.md`.
 - `analyze.ipynb`: the continuous analysis; results in `result_README.md`.
 - `report_violation_rate.py`: recomputes violation rates for `Experiments_constraints/` from the Tsai-Wu surrogate.
-- `print_minimums.py` reads only `Experiments_constraint_continuous/`.
+- `print_minimums.py` reads only `Experiments_constraint_continuous/`; `print_mins_script.py` is the same report over a recursive glob from the CWD.
+- `analyze_constraint_continuous_regret.ipynb`: cumulative regret and running minimum for one continuous root (`ROOT` at the top, currently the 4-actuator dir).
+- Shape-gap figures: `extract_shape_gap_force_configs.py` reads one continuous `.pth` plus the init/target shapes and writes a `shape_gap_reduction_extract/` dir (CSVs, `.npz`, `summary.json`); `plot_shape_gap_reduction_panels.py --extract-dir` and `plot_classic_quantum_shape_gap_comparison.py --quantum-dir/--classic-dir` plot those extracts. All defaults point into `Experiments_constraint_continuous/`, which exists only in the original folder.
+- `draw_shape.ipynb` draws fuselage layers and shapes; `train_GP.ipynb` only sanity-checks the Tsai-Wu surrogate.
 - The READMEs' numbers are partly stale because runs were overwritten later; recompute from the data.
 
 ### Simulation study (`simulation_study/`)
@@ -151,14 +166,17 @@ This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside t
   - `quantum_safe_bo_real.py`: IBM hardware; it imports the root `circuit_utils.py` via `sys.path`.
   - `unconstrained_bo.py` and `ACL_paper.py`: baselines.
   - `experiment_env.py`: builds the grid and functions.
-- **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags.
+- **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags. Both drivers use LAM0 0.8, LAM_T0 10 and LAM_P 1.0; `compare_safe_methods_shared_init.py` currently sets SEED 2 and N_INIT 5.
 - **Drivers:**
   - `compare_safe_methods_shared_init.py`: single seed; it always tries IBM hardware.
   - `multi_init_cumulative_regret.py`: seeds 5–9, with `INCLUDE_REAL_QUANTUM = True`. It resumes from `multi_init_checkpoint.pkl` and skips finished runs.
+  - `_smoke_compare.py`: tiny-grid smoke test of all five methods (grid 10, no plots or pickles); it also tries a 127-qubit IBM backend.
+  - `tune_hyperparams.py`: random 80-config sweep of the classical method; it only prints the top 5.
 - **Replot instead of re-running:**
   - `replot_multi_init_from_pkl.py` rebuilds the table and figure from the checkpoint.
   - `replot_from_pkl.py` and `replot_from_txt.py` rebuild `comparison_regret.png` from `results_<ts>.{pkl,txt}`; the `.txt` embeds the regret curves.
 - **Headline numbers:** read `multi_init_stats.txt`. The README's tables, seed and path (`simulated_study/`) are older.
+- **Unused or one-off:** `compare_safe_methods_lib.py` is imported by nothing, `cleanup_tmp.py` deletes an old scratch directory, and `rerun_archives/` keeps an earlier multi-init run's outputs.
 - **Regret conventions:** quantum runs store `cumu_regret_expanded` (per oracle query) and classical runs store `queried_cumu_regret_hist`; both are padded or trimmed to `ORACLE_BUDGET`. Simple regret is noise-free: |global safe optimum − best true objective among feasible queried points|.
 
 ### IBM hardware
@@ -170,8 +188,8 @@ This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside t
 ## Hyperparameters
 
 - **Discrete defaults are the tuned values:** B 3.0, obj_ls 0.2, t0 10, lam_p 2.0, init_num_points 5, M 400, eps_max 0.04.
-  - lam0 is 0.5 in the quantum script, the winner of `sweep_quantum_safeset_exact.py` (see `quantum_safeset_exact_sweep_best.json`), and 1.0 in the classical script. The published discrete comparison therefore used different lam0 values.
-- **Classical proxy sweep:** `sweep_hyperparams.py` writes `sweep_results.json`, summarized in `hyperparameter_sweep_results.md`. Findings:
+  - lam0 is 0.5 in the quantum script, the winner of `sweep_quantum_safeset_exact.py` (see `quantum_safeset_exact_sweep_best.json`), and 1.0 in the classical script. The published discrete comparison therefore used different lam0 values. That sweep runs `quantum_safeset_discrete.py` as a subprocess per config (edit its `configs` list) and logs to `sweep_logs/`.
+- **Classical proxy sweep:** `sweep_hyperparams.py` (no CLI; edit `CONFIGS` and `NOISE_LEVELS` in `main()`) reimplements the loop without the env and writes `sweep_results.json`, summarized in `hyperparameter_sweep_results.md`. Findings:
   - With 1 warmup point, only 2–3 of 5 seeds converge; 3 or more points reach 5/5.
   - B = 1 stalls safe-set growth (about 45% of the grid explored, versus about 49% at B = 3).
   - obj_ls 0.2 versus 0.5 made no measurable difference.
