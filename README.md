@@ -10,16 +10,14 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 | `bo_env_constraints.py`, `quantum_bo_env_constraint.py`, `circuit_utils.py`, `utils.py` | Surrogate environments, custom iterative amplitude estimation, and shared GP/sampling helpers |
 | `surrogate_likeDu_v22.joblib`, `surrogate_tsaiwu.joblib`, `surrogate_modeling/` | Linear shape surrogate, Tsai-Wu constraint surrogate, and surrogate training data |
 | `FuselageActuators/` | ANSYS input decks (`AnsysFiles/`), displacement shapes (`Shapes/`), and a live-ANSYS Gym environment |
-| `Experiments_constraints/` | Discrete-grid results (`.pth`) used by `analysis/analyze_discrete.ipynb` |
-| `simulation_study/` | 2D synthetic benchmark with cached results and figures |
+| `simulation_study/` | 2D synthetic benchmark (its cached results and figures are in the history, see below) |
 | `analysis/` | Analysis notebooks and the compare, plot, extract and report scripts (run the scripts from the repository root) |
 | `sweeps/` | Hyperparameter sweeps and their JSON results |
 | `docs/` | Write-ups of the discrete, continuous and sweep results |
 | `scripts/` | Shell driver for the force-range experiments |
-| `figures/` | Generated plots and the CSVs behind them |
 | `legacy/` | Superseded, broken, or one-off scripts, kept for reference (see `legacy/README.md`) |
 
-**Not included:** the continuous-space results (about 8 GB: `Experiments_constraint_continuous*/`, `Experiments_unconstraint_continuous/`) and older result folders. The continuous-run notebooks and compare scripts need those folders at the repository root.
+**Not included:** the continuous-space results (about 8 GB: `Experiments_constraint_continuous*/`, `Experiments_unconstraint_continuous/`) and older result folders. The continuous-run notebooks and compare scripts need those folders at the repository root. The discrete-grid results (`Experiments_constraints/`), the generated figures (`figures/`) and the simulation-study result files were removed from the repository on 2026-09-25; they are in the history up to commit `c5a1b8f` (`git checkout c5a1b8f -- Experiments_constraints figures simulation_study`).
 
 ## Setup
 

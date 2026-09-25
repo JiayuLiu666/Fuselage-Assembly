@@ -20,16 +20,16 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 - **`docs/`:** the result write-ups (`analyze_discrete_README.md`, `result_README.md`, `hyperparameter_sweep_results.md`).
 - **`scripts/`:** `run_force_range_experiments.sh`.
 - **Surrogate copies:** `surrogate_modeling/` (training data and notebook) and `FuselageActuators/Surrogates/` hold byte-identical copies of `surrogate_likeDu_v22.joblib`. The scripts load the root copy.
-- **`figures/`:** generated plots and their CSVs. The compare scripts and `analysis/analyze_discrete.ipynb` write here.
+- **`figures/`:** where the compare scripts and `analysis/analyze_discrete.ipynb` write plots and CSVs. The directory was removed from the repo with the results (see **Git scope**), and the compare scripts do not create it, so `mkdir figures` before running them.
 - **`legacy/`:** superseded, broken, or one-off code, listed in `legacy/README.md`. Nothing at the top level imports from it. To run a legacy script, use `PYTHONPATH=. python legacy/<script>.py` from the root.
-- **Origin:** this folder is a clean clone of the original working folder `/data/liuj35/quan_fuselage`, which is the git remote `original`. That folder still holds the ~8 GB of continuous results and the `.history/` editor snapshots.
+- **Origin:** this folder started as a clean clone of the original working folder `/data/liuj35/quan_fuselage` (no longer configured as a remote). That folder still holds the ~8 GB of continuous results and the `.history/` editor snapshots. The only remote is `origin`, the GitHub repository `JiayuLiu666/Fuselage-Assembly`.
 
 ## Gotchas
 
-- **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. The discrete `.pth` files are tracked, so `git checkout -- Experiments_constraints/` restores them after a smoke test; continuous scripts accept `--results_root`.
+- **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. The discrete `.pth` files are no longer tracked (see **Git scope**), so restore the canonical set from history after a smoke test; continuous scripts accept `--results_root`.
 - **Run from the repo root.** Surrogates, `FuselageActuators/{AnsysFiles,Shapes}/Test/`, and result dirs resolve relative to CWD; this includes the `analysis/` scripts. The exception is `simulation_study/`, which must run from inside that directory.
 - **Filenames embed `str(obs_noise)`.** The default `0.1**2` produces `0.010000000000000002…`, but `--obs_noise 0.01` produces `0.01…`. To match existing files, omit the flag or pass the exact repr (`0.010000000000000002`, `0.04000000000000001`). `Classic_Discrete_Unconstrained/` was run with `--obs_noise 0.01`, so its σ = 0.1 files carry the short `0.01` prefix and a glob for `0.010000000000000002*` misses them.
-- **Git scope.** Of the `Experiments*` entries at the root (dirs or symlinks), `.gitignore` lets through only `Experiments_constraints/**/*.pth`. Figures, CSVs, sweep JSONs and `simulation_study/` caches are tracked. The continuous results live only in the original folder.
+- **Git scope.** The discrete results, `figures/` and the `simulation_study/` result files (`results_*.{pkl,txt}`, `multi_init_checkpoint.pkl`, `multi_init_stats.txt` and the PNGs) were removed from the repo on 2026-09-25. The last commit that carries them is `c5a1b8f`; `git checkout c5a1b8f -- Experiments_constraints figures simulation_study` restores all of them into the working tree and index (`git restore --staged .` afterwards if they should stay out of the next commit). Still tracked: the sweep JSONs and `simulation_study/rerun_archives/`. `.gitignore` ignores every `Experiments*` entry at the root except `Experiments_constraints/**/*.pth`, so re-running a discrete script leaves untracked `.pth` files in `git status`. The continuous results live only in the original folder.
   - To analyze them here, point `analysis/compare_actuator_count_cumulative_regret.py` at them with `--root-4/6/8`, or symlink the dirs into the root; `analysis/compare_force_range_cumulative_regret.py` has hardcoded roots.
   - Never `git add -f` them.
 - **`scripts/run_force_range_experiments.sh`** cds to the repo root and activates `quantum` itself (conda base from `conda info --base`, falling back to `~/anaconda3`). It runs the three constrained continuous scripts at 500 and 200 lb one after another.
@@ -57,10 +57,10 @@ conda activate quantum
 - **`ansys.mapdl`:** the env modules import it at the top level, so it must be installed. MAPDL launches are commented out and the envs run surrogate-only.
 - **Expected warning:** the joblib surrogates were pickled with scikit-learn 1.1.1, so loading them in a fresh interpreter prints version-mismatch warnings. They are harmless.
 - **GPUs:** this machine has four RTX A5000s. The discrete scripts use `cuda:0` when available and the CPU otherwise; the continuous scripts assign trial `i` to GPU `i % device_count`. Use `CUDA_VISIBLE_DEVICES` to choose GPUs.
-- **No tests or build:** there is no test suite, linter or build. Check syntax with `python -m py_compile <file>`. Smoke-test a discrete script with a small budget, then restore the tracked results it overwrote (all 5 trials take about 10 s classical and 20 s quantum, with warmup plus one to four steps each):
+- **No tests or build:** there is no test suite, linter or build. Check syntax with `python -m py_compile <file>`. Smoke-test a discrete script with a small budget, then remove the results it wrote, or restore the canonical ones from history (all 5 trials take about 10 s classical and 20 s quantum, with warmup plus one to four steps each):
   ```bash
   python classic_safeset_discrete.py --query_budget 300
-  git checkout -- Experiments_constraints/
+  rm -rf Experiments_constraints/   # or: git checkout c5a1b8f -- Experiments_constraints/
   ```
   For the continuous scripts pass `--results_root <scratch dir>` instead. `simulation_study/_smoke_compare.py` is the benchmark's smoke test.
 
@@ -131,7 +131,7 @@ The unconstrained scripts share seeds, shape lists and the safe init with their 
 
 ### Results layout
 
-- **Discrete (tracked):** `Experiments_constraints/<Method>/exp_set_1/{obs_noise}{prefix}training_data_{trial}_.pth`.
+- **Discrete (in git history up to `c5a1b8f`; see Git scope):** `Experiments_constraints/<Method>/exp_set_1/{obs_noise}{prefix}training_data_{trial}_.pth`.
   - Methods: `Classic_Discrete_cUCB`, `Quantum_Discrete_cUCB`, `Quantum_Discrete_cUCB_Real`, `Classic_ACL_Discrete`, `Classic_Discrete_Unconstrained`, `Quantum_Discrete_Unconstrained`.
   - Prefixes: none (classical), `quan_` (quantum), `acl_`.
 - **Continuous (local only):** `Experiments_constraint_continuous[_actuators_N][_force_F]/<Method>_<count>_<eta>_<lam>_<B>_[multi_gpu_]noise_<var>/exp_set_<k>/`.
@@ -175,13 +175,13 @@ This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside t
 - **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags. Both drivers use LAM0 0.8, LAM_T0 10 and LAM_P 1.0; `compare_safe_methods_shared_init.py` currently sets SEED 2 and N_INIT 5.
 - **Drivers:**
   - `compare_safe_methods_shared_init.py`: single seed; it always tries IBM hardware.
-  - `multi_init_cumulative_regret.py`: seeds 5–9, with `INCLUDE_REAL_QUANTUM = True`. It resumes from `multi_init_checkpoint.pkl` and skips finished runs.
+  - `multi_init_cumulative_regret.py`: seeds 5–9, with `INCLUDE_REAL_QUANTUM = True`. It resumes from `multi_init_checkpoint.pkl` and skips finished runs. The checkpoint was removed with the other results; without it (restore it from `c5a1b8f`) the script re-runs everything, including the IBM hardware runs.
   - `_smoke_compare.py`: tiny-grid smoke test of all five methods (grid 10, no plots or pickles); it also tries a 127-qubit IBM backend.
   - `tune_hyperparams.py`: random 80-config sweep of the classical method; it only prints the top 5.
 - **Replot instead of re-running:**
   - `replot_multi_init_from_pkl.py` rebuilds the table and figure from the checkpoint.
   - `replot_from_pkl.py` and `replot_from_txt.py` rebuild `comparison_regret.png` from `results_<ts>.{pkl,txt}`; the `.txt` embeds the regret curves.
-- **Headline numbers:** read `multi_init_stats.txt`. The README's tables, seed and path (`simulated_study/`) are older.
+- **Headline numbers:** `multi_init_stats.txt` (`git show c5a1b8f:simulation_study/multi_init_stats.txt`). The README's tables, seed and path (`simulated_study/`) are older.
 - **Unused or one-off:** `compare_safe_methods_lib.py` (imported by nothing) and `cleanup_tmp.py` (deleted an old scratch directory) now sit in `legacy/`; `rerun_archives/` keeps an earlier multi-init run's outputs.
 - **Regret conventions:** quantum runs store `cumu_regret_expanded` (per oracle query) and classical runs store `queried_cumu_regret_hist`; both are padded or trimmed to `ORACLE_BUDGET`. Simple regret is noise-free: |global safe optimum − best true objective among feasible queried points|.
 
