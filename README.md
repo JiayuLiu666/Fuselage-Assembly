@@ -54,7 +54,7 @@ Run the synthetic benchmark from inside its folder:
 ```bash
 cd simulation_study
 python replot_multi_init_from_pkl.py    # rebuild the figure and table from cached results
-python multi_init_cumulative_regret.py  # full multi-seed run (also tries IBM hardware)
+python multi_init_cumulative_regret.py  # full multi-seed run (IBM hardware only with INCLUDE_REAL_QUANTUM = True)
 ```
 
 The real-hardware scripts use `qiskit_ibm_runtime.QiskitRuntimeService()`, which needs a saved IBM Quantum account with QPU access.

@@ -62,7 +62,7 @@ V_KERNEL_RFF     = 1.0
 # Set INCLUDE_REAL_QUANTUM = True if you have IBM Quantum access and want
 # to include the real-hardware quantum method (slow — requires live backend).
 # ── Real quantum hardware (disabled for local testing) ──
-INCLUDE_REAL_QUANTUM = True
+INCLUDE_REAL_QUANTUM = False
 METHODS = ['C-Safe BO', 'Q-Safe BO', 'Unconstrained BO', 'BO-ACL']
 if INCLUDE_REAL_QUANTUM:
     from quantum_safe_bo_real import run_quantum_safe_bo_simulation_real

@@ -174,8 +174,9 @@ This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside t
   - `experiment_env.py`: builds the grid and functions.
 - **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags. Both drivers use LAM0 0.8, LAM_T0 10 and LAM_P 1.0; `compare_safe_methods_shared_init.py` currently sets SEED 2 and N_INIT 5.
 - **Drivers:**
-  - `compare_safe_methods_shared_init.py`: single seed; it always tries IBM hardware.
-  - `multi_init_cumulative_regret.py`: seeds 5–9, with `INCLUDE_REAL_QUANTUM = True`. It resumes from `multi_init_checkpoint.pkl` and skips finished runs. The checkpoint was removed with the other results; without it (restore it from `c5a1b8f`) the script re-runs everything, including the IBM hardware runs.
+  - Both drivers below have an `INCLUDE_REAL_QUANTUM` constant, currently `False`; setting it to `True` adds the IBM-hardware Q-Safe BO.
+  - `compare_safe_methods_shared_init.py`: single seed. With the flag off, its pickle stores `quantum_real: None`, which `replot_from_pkl.py` does not handle.
+  - `multi_init_cumulative_regret.py`: seeds 5–9. It resumes from `multi_init_checkpoint.pkl` and skips finished (method, seed) runs, so turning the flag on later runs only the hardware method. The `c5a1b8f` checkpoint also holds the hardware runs; without any checkpoint the script re-runs every enabled method.
   - `_smoke_compare.py`: tiny-grid smoke test of all five methods (grid 10, no plots or pickles); it also tries a 127-qubit IBM backend.
   - `tune_hyperparams.py`: random 80-config sweep of the classical method; it only prints the top 5.
 - **Replot instead of re-running:**

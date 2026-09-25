@@ -12,7 +12,6 @@ warnings.filterwarnings('ignore')
 from experiment_env import build_paper_sim2_environment, sample_initial_indices
 from safe_set_bo      import run_safe_bo_simulation, resolve_n_init
 from quantum_safe_bo  import run_quantum_safe_bo_simulation
-from quantum_safe_bo_real import run_quantum_safe_bo_simulation_real
 from unconstrained_bo import run_unconstrained_bo_simulation
 from ACL_paper        import run_bo_acl_simulation2
 
@@ -35,6 +34,13 @@ MODE        = 'min'
 LAM0   = 0.8   # initial boundary-expansion weight  (0 = pure objective, 1 = pure boundary)
 LAM_T0 = 10    # half-decay iteration               (larger → slower decay)
 LAM_P  = 1.0   # decay power                        (larger → faster decay)
+
+# ── Real quantum hardware ──
+# Set INCLUDE_REAL_QUANTUM = True if you have IBM Quantum access and want
+# to include the real-hardware quantum method (slow — requires live backend).
+INCLUDE_REAL_QUANTUM = False
+if INCLUDE_REAL_QUANTUM:
+    from quantum_safe_bo_real import run_quantum_safe_bo_simulation_real
 
 # ============================================================
 # Generate shared initial design ONCE
@@ -113,29 +119,31 @@ print(f"  Queried Best Value f(x*): {bv_q:.4f}")
 # ============================================================
 # 2b. Q-Safe BO (Real Hardware)
 # ============================================================
-from qiskit_ibm_runtime import QiskitRuntimeService
+res_qsafe_real = None
+if INCLUDE_REAL_QUANTUM:
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-print("\n[Q-Safe BO (Real)] Connecting to IBM Quantum...")
-service_ibm = QiskitRuntimeService()
-real_backend = None
-try:
-    real_backend = service_ibm.least_busy(operational=True, simulator=False)
-    print(f"[Q-Safe BO (Real)] Selected backend: {real_backend.name}")
-except Exception as e:
-    print(f"[Q-Safe BO (Real)] Failed to get backend: {e}")
+    print("\n[Q-Safe BO (Real)] Connecting to IBM Quantum...")
+    service_ibm = QiskitRuntimeService()
+    real_backend = None
+    try:
+        real_backend = service_ibm.least_busy(operational=True, simulator=False)
+        print(f"[Q-Safe BO (Real)] Selected backend: {real_backend.name}")
+    except Exception as e:
+        print(f"[Q-Safe BO (Real)] Failed to get backend: {e}")
 
-res_qsafe_real = run_quantum_safe_bo_simulation_real(
-    mode=MODE, xi=XI, grid_size=GRID_SIZE,
-    n_init=N_INIT, oracle_budget=ORACLE_BUDGET,
-    obj_noise_std=OBJ_NOISE, con_noise_std=CON_NOISE,
-    beta_f=0.2, beta_c=BETA_C, lam0=0.8, lam_t0=10, lam_p=2.0,
-    seed=SEED, init_idx=INIT_IDX.copy(),
-    M_rff=256, lam_rff=1.0, lengthscale_rff=0.2, v_kernel_rff=1.0,
-    con_lengthscale=1.0, con_outputscale=1.0,
-    use_quantum_query=True,
-    backend=real_backend,  # real IBM backend, same flow as quantum_safeset_discrete_real.py
-)
-print(f"\nQ-Safe BO (Real) done | total_oracle={res_qsafe_real.get('total_oracle_queries', 'N/A')}")
+    res_qsafe_real = run_quantum_safe_bo_simulation_real(
+        mode=MODE, xi=XI, grid_size=GRID_SIZE,
+        n_init=N_INIT, oracle_budget=ORACLE_BUDGET,
+        obj_noise_std=OBJ_NOISE, con_noise_std=CON_NOISE,
+        beta_f=0.2, beta_c=BETA_C, lam0=0.8, lam_t0=10, lam_p=2.0,
+        seed=SEED, init_idx=INIT_IDX.copy(),
+        M_rff=256, lam_rff=1.0, lengthscale_rff=0.2, v_kernel_rff=1.0,
+        con_lengthscale=1.0, con_outputscale=1.0,
+        use_quantum_query=True,
+        backend=real_backend,  # real IBM backend, same flow as quantum_safeset_discrete_real.py
+    )
+    print(f"\nQ-Safe BO (Real) done | total_oracle={res_qsafe_real.get('total_oracle_queries', 'N/A')}")
 
 # ============================================================
 # 3. Unconstrained BO  (no safety mask, synth_bo.py style)
@@ -192,20 +200,23 @@ budget = ORACLE_BUDGET
 
 r_safe  = quantum_cumu_regret(res_safe)[:budget]
 r_qsafe = quantum_cumu_regret(res_qsafe)[:budget]
-r_qsafe_real = quantum_cumu_regret(res_qsafe_real)[:budget]
+if INCLUDE_REAL_QUANTUM:
+    r_qsafe_real = quantum_cumu_regret(res_qsafe_real)[:budget]
 r_uncon = classical_cumu_regret(res_uncon)[:budget]
 r_acl   = classical_cumu_regret(res_acl)[:budget]
 
 x_safe  = np.arange(1, len(r_safe)  + 1)
 x_qsafe = np.arange(1, len(r_qsafe) + 1)
-x_qsafe_real = np.arange(1, len(r_qsafe_real) + 1)
+if INCLUDE_REAL_QUANTUM:
+    x_qsafe_real = np.arange(1, len(r_qsafe_real) + 1)
 x_uncon = np.arange(1, len(r_uncon) + 1)
 x_acl   = np.arange(1, len(r_acl)   + 1)
 
 print('Cumulative regret at end of budget:')
 print(f'  C-Safe BO          : {r_safe[-1]:.4f}  (oracle calls={len(r_safe)})')
 print(f'  Q-Safe BO  : {r_qsafe[-1]:.4f}  (oracle calls={len(r_qsafe)})')
-print(f'  Q-Safe BO (R): {r_qsafe_real[-1]:.4f}  (oracle calls={len(r_qsafe_real)})')
+if INCLUDE_REAL_QUANTUM:
+    print(f'  Q-Safe BO (R): {r_qsafe_real[-1]:.4f}  (oracle calls={len(r_qsafe_real)})')
 print(f'  Unconstrained BO : {r_uncon[-1]:.4f}  (steps={len(r_uncon)})')
 print(f'  BO-ACL           : {r_acl[-1]:.4f}  (steps={len(r_acl)})')
 
@@ -221,7 +232,8 @@ def safe_rate(res):
 print('Safe query rates:')
 print(f'  C-Safe BO          : {safe_rate(res_safe):.3f}')
 print(f'  Q-Safe BO  : {safe_rate(res_qsafe):.3f}')
-print(f'  Q-Safe BO (R): {safe_rate(res_qsafe_real):.3f}')
+if INCLUDE_REAL_QUANTUM:
+    print(f'  Q-Safe BO (R): {safe_rate(res_qsafe_real):.3f}')
 print(f'  Unconstrained BO : {safe_rate(res_uncon):.3f}')
 print(f'  BO-ACL           : {safe_rate(res_acl):.3f}')
 
@@ -252,7 +264,8 @@ STYLES = {
 # --- Cumulative Regret ---
 ax.plot(x_safe,  r_safe,  label='C-Safe BO',          color=COLORS['C-Safe BO'],          ls=STYLES['C-Safe BO'],          lw=2)
 ax.plot(x_qsafe, r_qsafe, label='Q-Safe BO',  color=COLORS['Q-Safe BO'],  ls=STYLES['Q-Safe BO'],  lw=2)
-ax.plot(x_qsafe_real, r_qsafe_real, label='Q-Safe BO (Real)', color=COLORS['Q-Safe BO (Real)'], ls=STYLES['Q-Safe BO (Real)'], lw=2)
+if INCLUDE_REAL_QUANTUM:
+    ax.plot(x_qsafe_real, r_qsafe_real, label='Q-Safe BO (Real)', color=COLORS['Q-Safe BO (Real)'], ls=STYLES['Q-Safe BO (Real)'], lw=2)
 ax.plot(x_uncon, r_uncon, label='Unconstrained BO', color=COLORS['Unconstrained BO'], ls=STYLES['Unconstrained BO'], lw=2)
 ax.plot(x_acl,   r_acl,   label='BO-ACL',           color=COLORS['BO-ACL'],           ls=STYLES['BO-ACL'],           lw=2)
 ax.set_xlabel('Iterations', fontsize=11)
@@ -271,10 +284,6 @@ print('Saved → comparison_regret.png')
 # ============================================================
 import torch
 from matplotlib.lines import Line2D
-fig, axes = plt.subplots(3, 5, figsize=(25, 14))
-fig.suptitle('Query Maps and Learned Constraint Boundary',
-             fontsize=13, fontweight='bold')
-
 RESULTS = [
     ('C-Safe BO',          res_safe,  COLORS['C-Safe BO']),
     ('Q-Safe BO',  res_qsafe, COLORS['Q-Safe BO']),
@@ -282,6 +291,11 @@ RESULTS = [
     ('Unconstrained BO', res_uncon, COLORS['Unconstrained BO']),
     ('BO-ACL',           res_acl,   COLORS['BO-ACL']),
 ]
+RESULTS = [r for r in RESULTS if r[1] is not None]  # drops Q-Safe BO (Real) when INCLUDE_REAL_QUANTUM is False
+
+fig, axes = plt.subplots(3, len(RESULTS), figsize=(5 * len(RESULTS), 14))
+fig.suptitle('Query Maps and Learned Constraint Boundary',
+             fontsize=13, fontweight='bold')
 
 for col, (label, res, color) in enumerate(RESULTS):
     xx = np.asarray(res['xx'])
@@ -517,8 +531,11 @@ print('Saved → acl_query_detail.png')
 # ============================================================
 headers = ['Method', 'Global Opt', 'Final Best Safe', 'Simple Regret', 'Cumu Regret', 'Safe Rate', 'Viol Rate']
 rows = []
-for label, res in [('Safe BO', res_safe), ('Q-Safe BO', res_qsafe), ('Q-Safe BO (R)', res_qsafe_real),
-                    ('Unconstrained BO', res_uncon), ('BO-ACL', res_acl)]:
+_table_results = [('Safe BO', res_safe), ('Q-Safe BO', res_qsafe), ('Q-Safe BO (R)', res_qsafe_real),
+                  ('Unconstrained BO', res_uncon), ('BO-ACL', res_acl)]
+for label, res in _table_results:
+    if res is None:  # Q-Safe BO (R) when INCLUDE_REAL_QUANTUM is False
+        continue
 
 
     sr = safe_rate(res)
@@ -609,12 +626,10 @@ with open(_txt_path, 'w') as _f:
         _f.write('  '.join(v.ljust(col_w) for v in row) + '\n')
     _f.write(sep + '\n\n')
     _f.write('Cumulative regret curves:\n')
-    for label, arr in [
-        ('C-Safe BO',          r_safe),
-        ('Q-Safe BO',  r_qsafe),
-        ('Quantum Safe (R)', r_qsafe_real),
-        ('Unconstrained BO', r_uncon),
-        ('BO-ACL',           r_acl),
-    ]:
+    _curves = [('C-Safe BO', r_safe), ('Q-Safe BO', r_qsafe)]
+    if INCLUDE_REAL_QUANTUM:
+        _curves.append(('Quantum Safe (R)', r_qsafe_real))
+    _curves += [('Unconstrained BO', r_uncon), ('BO-ACL', r_acl)]
+    for label, arr in _curves:
         _f.write(f'  {label}: {arr.tolist()}\n')
 print(f'Saved text summary  → {_txt_path}')
