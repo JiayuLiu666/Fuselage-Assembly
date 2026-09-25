@@ -12,18 +12,22 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 - **Discrete task:** a 21×21 grid (`linspace(-1, 1, 21)`) over dims 0 and 17, built by `sample_sobol_on_grid`. The function is defined inline in each discrete script and, despite its name, is not Sobol. 294 of 441 points are safe; the safe optimum is MAE 0.07159 at grid index 152.
 - **Continuous task:** `--actuator_count` picks the active dims: 2→(0,17), 4→(0,1,16,17), 6→(0,1,2,15,16,17), 8→(0–3,14–17). Actions are clamped to [−0.5, 0.5], so the max force is 0.5·force_scale.
 
+## Layout
+
+- **Top level:** the active pipeline (experiment scripts, envs, analysis and sweep scripts, notebooks) plus model and shape inputs.
+- **`figures/`:** generated plots and their CSVs. The compare scripts and `analyze_discrete.ipynb` write here.
+- **`legacy/`:** superseded, broken, or one-off code, listed in `legacy/README.md`. Nothing at the top level imports from it. To run a legacy script, use `PYTHONPATH=. python legacy/<script>.py` from the root.
+- **Origin:** this folder is a clean clone of the original working folder `/data/liuj35/quan_fuselage`, which is the git remote `original`. That folder still holds the ~8 GB of continuous results and the `.history/` editor snapshots.
+
 ## Gotchas
 
 - **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. Before a smoke test, copy the output dir aside; continuous scripts also accept `--results_root`.
 - **Run from the repo root.** Surrogates, `FuselageActuators/{AnsysFiles,Shapes}/Test/`, and result dirs resolve relative to CWD. The exception is `simulation_study/`, which must run from inside that directory.
 - **Filenames embed `str(obs_noise)`.** The default `0.1**2` produces `0.010000000000000002…`, but `--obs_noise 0.01` produces `0.01…`. To match existing files, omit the flag or pass the exact repr (`0.010000000000000002`, `0.04000000000000001`).
-- **Grep noise.** `.history/` (VS Code Local History) and `.restore_backups/` hold hundreds of stale copies of every script. Exclude them: `grep -r --exclude-dir=.history --exclude-dir=.restore_backups …`.
-- **Git scope.** Of the `Experiments*/` folders, `.gitignore` lets through only `Experiments_constraints/**/*.pth`. Figures, CSVs, sweep JSONs and `simulation_study/` caches are tracked. The ~8 GB of continuous results (`Experiments_constraint_continuous*`, `Experiments_unconstraint_continuous`, legacy `Experiments/`, `Experiments_version1/`) exist only on the original machine. Never `git add -f` them.
-- **Broken or stale scripts:**
-  - `sweep_hyperparams.sh` and `run_quantum_experiments.sh` pass removed flags (`--initial_num_points`, `--n_constraint_init`; the current flag is `--init_num_points`).
-  - `monitor_quantum_runs.sh` hardcodes old PIDs and log paths.
-  - `run_force_range_experiments.sh` sources a nonexistent `/opt/conda/...`, so activate `quantum` first.
-  - `test_run.py`, `plot_constraint_regret.py`, `run_compare_regret.py`, `check_grid_min.py`, `classic_turbo_discrete.py`, `quantum_cbo_POF.py` and `admmbo_classic.py` point at missing dirs or old env APIs.
+- **Git scope.** Of the `Experiments*` entries at the root (dirs or symlinks), `.gitignore` lets through only `Experiments_constraints/**/*.pth`. Figures, CSVs, sweep JSONs and `simulation_study/` caches are tracked. The continuous results live only in the original folder.
+  - To analyze them here, point `compare_actuator_count_cumulative_regret.py` at them with `--root-4/6/8`, or symlink the dirs into the root; `compare_force_range_cumulative_regret.py` has hardcoded roots.
+  - Never `git add -f` them.
+- **`run_force_range_experiments.sh`** sources a nonexistent `/opt/conda/...`, so activate `quantum` before running it.
 - **`reset()` return order differs.** The classical env returns `(file, error_init)`; the quantum env returns `(error_init, file)`. `classic_safeset_continuous.py` and `classic_bo_unconstrained.py` unpack it backwards, so their saved `error_init` is a filename string.
 - **Forces accumulate in the env.** Scripts call `env.reset(...)` after every evaluation; keep that when adding code paths.
 
@@ -95,7 +99,7 @@ The continuous scripts use the same score over a scrambled-Sobol candidate pool 
   - **Default path:** `qiskit_algorithms.IterativeAmplitudeEstimation` with the V1 `qiskit.primitives.Sampler(seed=0)`, so the estimate is deterministic for a given (x, ε).
   - **With `backend`:** uses the custom IAE in `circuit_utils.py`. It builds Q^k A|0⟩ circuits by hand, transpiles each round, and submits via `qiskit_ibm_runtime.SamplerV2(mode=backend)`. `find_next_k` picks the next Grover power, and CIs are Clopper-Pearson.
 - **Saved values:** `response` is the noisy −MAE/error_init (error_init is the zero-force MAE), and the BO maximizes it. `true_response` is the raw MAE.
-- **Legacy envs:** `bo_env.py` and `quantum_bo_env.py` are used only by TuRBO, `quantum_bo.py` and `quantum_bo_active.py`. The live-ANSYS Gym env is `FuselageActuators/FuselageActuators_env_v22.py`; `fuselageENV.py` is an identical copy.
+- **Legacy envs:** `legacy/bo_env.py` and `legacy/quantum_bo_env.py` are used only by the legacy scripts beside them. The live-ANSYS Gym env is `FuselageActuators/FuselageActuators_env_v22.py`.
 
 ### Script map
 
@@ -107,7 +111,7 @@ The continuous scripts use the same score over a scrambled-Sobol candidate pool 
 | Unconstrained, classical | `classic_bo_unconstrained_discrete.py` | `classic_bo_unconstrained.py` |
 | Unconstrained, quantum | `quantum_bo_discrete.py` | `quantum_bo_unconstrained.py` |
 
-The unconstrained scripts share seeds, shape lists and the safe init with their safe-set counterparts, so the curves are comparable. `quantum_bo.py` is legacy and not aligned. The TuRBO, POF and ADMM scripts are legacy.
+The unconstrained scripts share seeds, shape lists and the safe init with their safe-set counterparts, so the curves are comparable. The TuRBO, POF, ADMM and `quantum_bo.py` scripts are in `legacy/`; `quantum_bo.py` is not aligned with the other baselines.
 
 ### Results layout
 

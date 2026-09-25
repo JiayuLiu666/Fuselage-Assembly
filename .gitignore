@@ -14,10 +14,11 @@ __pycache__/
 .claude/settings.local.json
 
 # ── Experiment results (8+ GB) — kept on disk only ─────────────
-# Every Experiments*/ folder is ignored except the discrete-grid .pth
-# results in Experiments_constraints/ (the .inp copies scripts drop
-# next to results are ignored too; originals live in FuselageActuators/).
-/Experiments*/
+# Every root Experiments* entry (folder or symlink) is ignored except the
+# discrete-grid .pth results in Experiments_constraints/ (the .inp copies
+# scripts drop next to results are ignored too; originals live in
+# FuselageActuators/).
+/Experiments*
 !/Experiments_constraints/
 /Experiments_constraints/**
 !/Experiments_constraints/**/

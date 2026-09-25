@@ -122,7 +122,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-prefix",
-        default="actuator_count_cumulative_regret_noise_0p01",
+        default="figures/actuator_count_cumulative_regret_noise_0p01",
         help="Prefix for output PNG and CSV files.",
     )
     return parser.parse_args()
@@ -452,6 +452,7 @@ def main() -> None:
         raise SystemExit("No matching cumulative-regret curves were found.")
 
     png_path = Path(f"{args.output_prefix}.png")
+    png_path.parent.mkdir(parents=True, exist_ok=True)
     csv_path = Path(f"{args.output_prefix}.csv")
     plot_results(stats, methods, args.counts, x_lim, args.noise, png_path)
     write_summary_csv(summary_rows, csv_path)

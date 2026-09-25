@@ -12,9 +12,12 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 | `FuselageActuators/` | ANSYS input decks (`AnsysFiles/`), displacement shapes (`Shapes/`), and a live-ANSYS Gym environment |
 | `Experiments_constraints/` | Discrete-grid results (`.pth`) used by `analyze_discrete.ipynb` |
 | `simulation_study/` | 2D synthetic benchmark with cached results and figures |
-| `*.ipynb`, `compare_*.py`, `plot_*.py` | Analysis notebooks and plotting scripts |
+| `*.ipynb`, `compare_*.py`, `plot_*.py`, `report_violation_rate.py` | Analysis notebooks and plotting scripts |
+| `sweep_*.py`, `*sweep*.json` | Hyperparameter sweeps and their results |
+| `figures/` | Generated plots and the CSVs behind them |
+| `legacy/` | Superseded, broken, or one-off scripts, kept for reference (see `legacy/README.md`) |
 
-**Not included:** the continuous-space results (about 8 GB: `Experiments_constraint_continuous*/`, `Experiments_unconstraint_continuous/`) and older result folders. The continuous-run notebooks and compare scripts need those folders.
+**Not included:** the continuous-space results (about 8 GB: `Experiments_constraint_continuous*/`, `Experiments_unconstraint_continuous/`) and older result folders. The continuous-run notebooks and compare scripts need those folders at the repository root.
 
 ## Setup
 
