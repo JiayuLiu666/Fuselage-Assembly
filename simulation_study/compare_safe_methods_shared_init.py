@@ -20,10 +20,10 @@ print('All modules loaded OK')
 # ============================================================
 # Shared experiment settings
 # ============================================================
-SEED        = 2
+SEED        = 0
 GRID_SIZE   = 25
 XI          = 0   # constraint threshold h(x) >= xi is feasible
-N_INIT      = 5   # shared model init points
+N_INIT      = 10  # shared model init points
 BETA_C = 3.0
 
 ORACLE_BUDGET = 500     # total oracle calls (= n_iter for classical methods)

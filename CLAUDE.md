@@ -172,7 +172,7 @@ This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside t
   - `quantum_safe_bo_real.py`: IBM hardware; it imports the root `circuit_utils.py` via `sys.path`.
   - `unconstrained_bo.py` and `ACL_paper.py`: baselines.
   - `experiment_env.py`: builds the grid and functions.
-- **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags. Both drivers use LAM0 0.8, LAM_T0 10 and LAM_P 1.0; `compare_safe_methods_shared_init.py` currently sets SEED 2 and N_INIT 5.
+- **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags. Both drivers use LAM0 0.8, LAM_T0 10 and LAM_P 1.0; `compare_safe_methods_shared_init.py` currently sets SEED 0 and N_INIT 10.
 - **Drivers:**
   - Both drivers below have an `INCLUDE_REAL_QUANTUM` constant, currently `False`; setting it to `True` adds the IBM-hardware Q-Safe BO.
   - `compare_safe_methods_shared_init.py`: single seed. With the flag off, its pickle stores `quantum_real: None`, which `replot_from_pkl.py` does not handle.
