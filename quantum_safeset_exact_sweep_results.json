@@ -1,0 +1,690 @@
+[
+  {
+    "config": {
+      "label": "M400_B3_ls02_lam1_t10_p2",
+      "M_features": 400,
+      "B": 3.0,
+      "obj_ls": 0.2,
+      "lam0": 1.0,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B3_ls02_lam1_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.026373701226427675,
+      "max_final_simple_regret": 0.03980421400184114,
+      "avg_steps": 39.2,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 40,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 40,
+        "unsafe_queries": 0,
+        "final_total_budget": 22058
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20140
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 40,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 40,
+        "unsafe_queries": 0,
+        "final_total_budget": 22718
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 36,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 36,
+        "unsafe_queries": 0,
+        "final_total_budget": 22003
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 39,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 39,
+        "unsafe_queries": 0,
+        "final_total_budget": 23956
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M300_B3_ls02_lam1_t10_p2",
+      "M_features": 300,
+      "B": 3.0,
+      "obj_ls": 0.2,
+      "lam0": 1.0,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M300_B3_ls02_lam1_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.012593983471126285,
+      "max_final_simple_regret": 0.017420026042818698,
+      "avg_steps": 38.8,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07694597816632202,
+        "final_simple_regret": 0.0053549196135876664,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 22227
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 38,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 38,
+        "unsafe_queries": 0,
+        "final_total_budget": 22041
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 38,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 38,
+        "unsafe_queries": 0,
+        "final_total_budget": 21094
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 36,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07694597816632202,
+        "final_simple_regret": 0.0053549196135876664,
+        "safe_queries": 36,
+        "unsafe_queries": 0,
+        "final_total_budget": 21840
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20153
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M600_B3_ls02_lam1_t10_p2",
+      "M_features": 600,
+      "B": 3.0,
+      "obj_ls": 0.2,
+      "lam0": 1.0,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M600_B3_ls02_lam1_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.008038994339845035,
+      "max_final_simple_regret": 0.017420026042818698,
+      "avg_steps": 40.2,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 42,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07159105855273441,
+        "final_simple_regret": 5.551115123125783e-17,
+        "safe_queries": 42,
+        "unsafe_queries": 0,
+        "final_total_budget": 20318
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 39,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07694597816632202,
+        "final_simple_regret": 0.0053549196135876664,
+        "safe_queries": 39,
+        "unsafe_queries": 0,
+        "final_total_budget": 22426
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07159105855273441,
+        "final_simple_regret": 5.551115123125783e-17,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20027
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 37,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 37,
+        "unsafe_queries": 0,
+        "final_total_budget": 20134
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 42,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 42,
+        "unsafe_queries": 0,
+        "final_total_budget": 22667
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M400_B1_ls02_lam1_t20_p2",
+      "M_features": 400,
+      "B": 1.0,
+      "obj_ls": 0.2,
+      "lam0": 1.0,
+      "t0": 20.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B1_ls02_lam1_t20_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.026373701226427675,
+      "max_final_simple_regret": 0.03980421400184114,
+      "avg_steps": 43.2,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 44,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 44,
+        "unsafe_queries": 0,
+        "final_total_budget": 23824
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20289
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 43,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 43,
+        "unsafe_queries": 0,
+        "final_total_budget": 20922
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 47,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 47,
+        "unsafe_queries": 0,
+        "final_total_budget": 22638
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20955
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M400_B3_ls03_lam1_t10_p2",
+      "M_features": 400,
+      "B": 3.0,
+      "obj_ls": 0.3,
+      "lam0": 1.0,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B3_ls03_lam1_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.026373701226427675,
+      "max_final_simple_regret": 0.03980421400184114,
+      "avg_steps": 39.2,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 40,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 40,
+        "unsafe_queries": 0,
+        "final_total_budget": 22058
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 41,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 41,
+        "unsafe_queries": 0,
+        "final_total_budget": 20140
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 40,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 40,
+        "unsafe_queries": 0,
+        "final_total_budget": 22718
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 36,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 36,
+        "unsafe_queries": 0,
+        "final_total_budget": 22003
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 39,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 39,
+        "unsafe_queries": 0,
+        "final_total_budget": 23956
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M400_B3_ls02_lam05_t10_p2",
+      "M_features": 400,
+      "B": 3.0,
+      "obj_ls": 0.2,
+      "lam0": 0.5,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B3_ls02_lam05_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.0052460498000895,
+      "max_final_simple_regret": 0.017420026042818698,
+      "avg_steps": 37.6,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 38,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07159105855273441,
+        "final_simple_regret": 5.551115123125783e-17,
+        "safe_queries": 38,
+        "unsafe_queries": 0,
+        "final_total_budget": 21052
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 38,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07694597816632202,
+        "final_simple_regret": 0.0053549196135876664,
+        "safe_queries": 38,
+        "unsafe_queries": 0,
+        "final_total_budget": 21485
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 40,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 40,
+        "unsafe_queries": 0,
+        "final_total_budget": 24756
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 36,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07504636189677538,
+        "final_simple_regret": 0.0034553033440410247,
+        "safe_queries": 36,
+        "unsafe_queries": 0,
+        "final_total_budget": 20231
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 36,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07159105855273441,
+        "final_simple_regret": 5.551115123125783e-17,
+        "safe_queries": 36,
+        "unsafe_queries": 0,
+        "final_total_budget": 20933
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M400_B3_ls02_lam15_t10_p2",
+      "M_features": 400,
+      "B": 3.0,
+      "obj_ls": 0.2,
+      "lam0": 1.5,
+      "t0": 10.0,
+      "lam_p": 2.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B3_ls02_lam15_t10_p2.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.01841285842605946,
+      "max_final_simple_regret": 0.03980421400184114,
+      "avg_steps": 42.6,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 44,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 44,
+        "unsafe_queries": 0,
+        "final_total_budget": 20220
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 44,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 44,
+        "unsafe_queries": 0,
+        "final_total_budget": 21365
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 45,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 45,
+        "unsafe_queries": 0,
+        "final_total_budget": 22819
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 37,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 37,
+        "unsafe_queries": 0,
+        "final_total_budget": 21450
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 43,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.07159105855273441,
+        "final_simple_regret": 5.551115123125783e-17,
+        "safe_queries": 43,
+        "unsafe_queries": 0,
+        "final_total_budget": 23054
+      }
+    ]
+  },
+  {
+    "config": {
+      "label": "M400_B1_ls02_lam1_t10_p1",
+      "M_features": 400,
+      "B": 1.0,
+      "obj_ls": 0.2,
+      "lam0": 1.0,
+      "t0": 10.0,
+      "lam_p": 1.0,
+      "query_budget": 20000,
+      "init_num_points": 5
+    },
+    "log": "sweep_logs/quantum_safeset_exact/M400_B1_ls02_lam1_t10_p1.log",
+    "optimum": {
+      "safe_opt_mae": 0.07159105855273436,
+      "safe_opt_index": 152,
+      "n_safe_grid": 294,
+      "n_grid": 441
+    },
+    "summary": {
+      "n_trials": 5,
+      "avg_simple_regret": 5.551115123125783e-17,
+      "max_simple_regret": 5.551115123125783e-17,
+      "avg_final_simple_regret": 0.05851318083348933,
+      "max_final_simple_regret": 0.17811742407812697,
+      "avg_steps": 54.4,
+      "total_unsafe_queries": 0
+    },
+    "trials": [
+      {
+        "file": "0.010000000000000002quan_training_data_0_.pth",
+        "steps": 57,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 57,
+        "unsafe_queries": 0,
+        "final_total_budget": 24677
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_1_.pth",
+        "steps": 54,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.1113952725545755,
+        "final_simple_regret": 0.03980421400184114,
+        "safe_queries": 54,
+        "unsafe_queries": 0,
+        "final_total_budget": 21519
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_2_.pth",
+        "steps": 54,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 54,
+        "unsafe_queries": 0,
+        "final_total_budget": 21010
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_3_.pth",
+        "steps": 58,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.24970848263086134,
+        "final_simple_regret": 0.17811742407812697,
+        "safe_queries": 58,
+        "unsafe_queries": 0,
+        "final_total_budget": 20330
+      },
+      {
+        "file": "0.010000000000000002quan_training_data_4_.pth",
+        "steps": 49,
+        "best_mae": 0.07159105855273441,
+        "simple_regret": 5.551115123125783e-17,
+        "final_mae": 0.08901108459555306,
+        "final_simple_regret": 0.017420026042818698,
+        "safe_queries": 49,
+        "unsafe_queries": 0,
+        "final_total_budget": 24500
+      }
+    ]
+  }
+]

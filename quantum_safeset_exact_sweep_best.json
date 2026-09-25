@@ -1,0 +1,86 @@
+{
+  "config": {
+    "label": "M400_B3_ls02_lam05_t10_p2",
+    "M_features": 400,
+    "B": 3.0,
+    "obj_ls": 0.2,
+    "lam0": 0.5,
+    "t0": 10.0,
+    "lam_p": 2.0,
+    "query_budget": 20000,
+    "init_num_points": 5
+  },
+  "log": "sweep_logs/quantum_safeset_exact/M400_B3_ls02_lam05_t10_p2.log",
+  "optimum": {
+    "safe_opt_mae": 0.07159105855273436,
+    "safe_opt_index": 152,
+    "n_safe_grid": 294,
+    "n_grid": 441
+  },
+  "summary": {
+    "n_trials": 5,
+    "avg_simple_regret": 5.551115123125783e-17,
+    "max_simple_regret": 5.551115123125783e-17,
+    "avg_final_simple_regret": 0.0052460498000895,
+    "max_final_simple_regret": 0.017420026042818698,
+    "avg_steps": 37.6,
+    "total_unsafe_queries": 0
+  },
+  "trials": [
+    {
+      "file": "0.010000000000000002quan_training_data_0_.pth",
+      "steps": 38,
+      "best_mae": 0.07159105855273441,
+      "simple_regret": 5.551115123125783e-17,
+      "final_mae": 0.07159105855273441,
+      "final_simple_regret": 5.551115123125783e-17,
+      "safe_queries": 38,
+      "unsafe_queries": 0,
+      "final_total_budget": 21052
+    },
+    {
+      "file": "0.010000000000000002quan_training_data_1_.pth",
+      "steps": 38,
+      "best_mae": 0.07159105855273441,
+      "simple_regret": 5.551115123125783e-17,
+      "final_mae": 0.07694597816632202,
+      "final_simple_regret": 0.0053549196135876664,
+      "safe_queries": 38,
+      "unsafe_queries": 0,
+      "final_total_budget": 21485
+    },
+    {
+      "file": "0.010000000000000002quan_training_data_2_.pth",
+      "steps": 40,
+      "best_mae": 0.07159105855273441,
+      "simple_regret": 5.551115123125783e-17,
+      "final_mae": 0.08901108459555306,
+      "final_simple_regret": 0.017420026042818698,
+      "safe_queries": 40,
+      "unsafe_queries": 0,
+      "final_total_budget": 24756
+    },
+    {
+      "file": "0.010000000000000002quan_training_data_3_.pth",
+      "steps": 36,
+      "best_mae": 0.07159105855273441,
+      "simple_regret": 5.551115123125783e-17,
+      "final_mae": 0.07504636189677538,
+      "final_simple_regret": 0.0034553033440410247,
+      "safe_queries": 36,
+      "unsafe_queries": 0,
+      "final_total_budget": 20231
+    },
+    {
+      "file": "0.010000000000000002quan_training_data_4_.pth",
+      "steps": 36,
+      "best_mae": 0.07159105855273441,
+      "simple_regret": 5.551115123125783e-17,
+      "final_mae": 0.07159105855273441,
+      "final_simple_regret": 5.551115123125783e-17,
+      "safe_queries": 36,
+      "unsafe_queries": 0,
+      "final_total_budget": 20933
+    }
+  ]
+}

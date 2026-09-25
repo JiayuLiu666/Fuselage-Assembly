@@ -1,0 +1,42 @@
+# ── Python / Jupyter ───────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# ── Editor, agent and local-machine state ──────────────────────
+# VS Code "Local History" snapshots and manual rollback copies
+.history/
+.restore_backups/
+# Throwaway HOME used for sandboxed runs (matplotlib / ANSYS caches)
+.fakehome/
+.vscode/
+.codex
+.claude/settings.local.json
+
+# ── Experiment results (8+ GB) — kept on disk only ─────────────
+# Every Experiments*/ folder is ignored except the discrete-grid .pth
+# results in Experiments_constraints/ (the .inp copies scripts drop
+# next to results are ignored too; originals live in FuselageActuators/).
+/Experiments*/
+!/Experiments_constraints/
+/Experiments_constraints/**
+!/Experiments_constraints/**/
+!/Experiments_constraints/**/*.pth
+
+# ── Logs and run output ─────────────────────────────────────────
+*.log
+*.out
+logs/
+sweep_logs/
+force_range_logs/
+
+# ── Root-level scratch files ────────────────────────────────────
+# Notes, temp dumps, diffs, and verbatim BoTorch source copies
+# (*_py.txt, backup_func.txt). requirements.txt is the only tracked .txt.
+/*.txt
+!/requirements.txt
+/*.diff
+/0
+
+# ── Third-party papers ──────────────────────────────────────────
+*.pdf

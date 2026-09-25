@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(nohup python *)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//data/liuj35/**)",
+      "Bash(python -c \"import qiskit_ibm_runtime; print\\(qiskit_ibm_runtime.__version__\\)\")",
+      "Bash(python -c \"from qiskit_ibm_runtime import Sampler; import inspect; print\\(inspect.signature\\(Sampler.__init__\\)\\)\")",
+      "Bash(python -m py_compile quantum_safe_bo_real.py)",
+      "Bash(python -c \"from quantum_safe_bo_real import run_quantum_safe_bo_simulation_real, quantum_amplitude_query; import inspect; print\\('IMPORT OK'\\); print\\('quantum_amplitude_query sig:', inspect.signature\\(quantum_amplitude_query\\)\\); print\\('run_quantum_safe_bo_simulation_real n_params:', len\\(inspect.signature\\(run_quantum_safe_bo_simulation_real\\).parameters\\)\\)\")",
+      "Bash(timeout 180 python -c ' *)",
+      "Bash(python -c ' *)",
+      "Bash(python -u _smoke_test_real_backend.py)",
+      "Bash(tee _smoke_test_real_backend.log)",
+      "Bash(python -u _smoke_compare.py)",
+      "Bash(tee _smoke_compare.log)"
+    ]
+  }
+}

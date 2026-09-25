@@ -1,0 +1,9 @@
+# pandas==1.5.2
+qiskit==0.44
+qiskit_aer==0.12.0
+qiskit_finance==0.3.4
+qiskit-algorithms==0.3.0
+qiskit_ibmq_provider==0.20.2
+qiskit_terra
+# scikit_learn==1.2.0
+# scipy==1.10.1
