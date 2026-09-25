@@ -1,5 +1,7 @@
 # Quantum-Enhanced Safe Bayesian Optimization for Fuselage Shape Adjustment
 
+**Paper:** [Quantum Safe-Set Bayesian Optimization for Quality Improvement in Fuselage Assembly](https://arxiv.org/abs/2511.22090), Jiayu Liu, Chong Liu, Trevor Rhone and Yinan Wang (arXiv:2511.22090).
+
 Research code comparing classical safe-set Bayesian optimization (BO) with a quantum variant that estimates the objective by Quantum Amplitude Estimation (QAE). The application is choosing actuator forces that bring an initial fuselage shape close to a target shape. A Tsai-Wu failure-criterion constraint keeps every queried configuration structurally safe. A 2D synthetic benchmark in `simulation_study/` validates the algorithms first.
 
 ## Repository contents
@@ -63,3 +65,19 @@ The real-hardware scripts use `qiskit_ibm_runtime.QiskitRuntimeService()`, which
 
 - `CLAUDE.md`: algorithm details, script map, results layout, and known issues
 - `docs/analyze_discrete_README.md`, `docs/result_README.md`, `docs/hyperparameter_sweep_results.md`, `simulation_study/README.md`: descriptions of the analyses
+
+## Citation
+
+If you use this code, please cite the paper:
+
+```bibtex
+@misc{liu2026quantumsafesetbayesianoptimization,
+      title={Quantum Safe-Set Bayesian Optimization for Quality Improvement in Fuselage Assembly},
+      author={Jiayu Liu and Chong Liu and Trevor Rhone and Yinan Wang},
+      year={2026},
+      eprint={2511.22090},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2511.22090},
+}
+```
