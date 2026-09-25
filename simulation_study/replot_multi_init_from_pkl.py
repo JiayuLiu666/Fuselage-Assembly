@@ -151,8 +151,7 @@ for m in METHODS:
 # ============================================================
 fig, ax = plt.subplots(figsize=(9, 5.5))
 fig.suptitle(
-    f'Cumulative Regret vs Oracle Budget\n'
-    f'({N_RUNS} runs, grid={GRID_SIZE}^2, noise={OBJ_NOISE})',
+    f'Cumulative Regret vs Oracle Budget\n',
     fontsize=13, fontweight='bold',
 )
 
