@@ -4,187 +4,171 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Quantum-Classical Hybrid Bayesian Optimization research for aerospace manufacturing. The project compares classical GP-based safe-set Bayesian Optimization (BO) against quantum variants that use Quantum Amplitude Estimation (QAE) for constraint satisfaction checking, applied to fuselage actuator force optimization with Tsai-Wu failure criterion constraints.
+Research code comparing classical safe-set Bayesian optimization (BO) with a quantum variant for fuselage actuator-force optimization under a Tsai-Wu structural-safety constraint. The classical and quantum pipelines share the same GP safe-set and acquisition logic. They differ only in how the **objective** is estimated at a queried point: Monte Carlo sampling (sample count from a Chebyshev bound, ~1/ε²) versus Quantum Amplitude Estimation (QAE, ~1/ε oracle calls). The constraint is never estimated by QAE.
 
-The 18-dimensional action space represents forces on fuselage actuators, but only 8 are active (indices 0–3 and 14–17); the rest are zeroed out by `sample_actions` in `utils.py`. However, the discrete grid used in the main experiments (`sample_sobol_on_grid`) is actually a **2D Cartesian product** (21×21 = 441 points) of `linspace(-1, 1, 21)` over **only dims 0 and 17** — despite the function name, it is not Sobol-sampled.
+- **Action:** 18-dim normalized actuator forces. The env applies `forces += action * force_scale` (lb, default 1000).
+- **Objective:** shape error, MAE = mean |initPos[:, :2] + coef_·F − targetPos[:, :2]| over 354 coordinates. `coef_` (354×18) comes from the linear surrogate `surrogate_likeDu_v22.joblib`; the intercept is dropped. The default task is init shape DP52 → target DP53. Lower is better.
+- **Constraint:** c(x) = 1 − FI(x) from `surrogate_tsaiwu.joblib` (sklearn Pipeline: StandardScaler + GaussianProcessRegressor). It is evaluated exactly (noise-free) on the *normalized* action, and c ≥ 0 means safe. Because FI ignores `force_scale`, the safe region is identical across force scales.
+- **Discrete task:** a 21×21 grid (`linspace(-1, 1, 21)`) over dims 0 and 17, built by `sample_sobol_on_grid`. The function is defined inline in each discrete script and, despite its name, is not Sobol. 294 of 441 points are safe; the safe optimum is MAE 0.07159 at grid index 152.
+- **Continuous task:** `--actuator_count` picks the active dims: 2→(0,17), 4→(0,1,16,17), 6→(0,1,2,15,16,17), 8→(0–3,14–17). Actions are clamped to [−0.5, 0.5], so the max force is 0.5·force_scale.
 
-The constraint is defined as `c(x) = 1 - FI(x)` where FI = Tsai-Wu failure index; `c(x) ≥ 0` means structurally safe. `sample_kmeans_safe_subspace` filters candidate warmup points by `1.0 - FI ≥ 0.0` before clustering.
+## Gotchas
+
+- **Runs overwrite results.** Output paths are fixed, with no run id, and scripts re-save during the run. Re-running any experiment script overwrites the canonical `.pth` files. `sweep_quantum_safeset_exact.py` rewrites `Experiments_constraints/Quantum_Discrete_cUCB/exp_set_1/` once per config. Before a smoke test, copy the output dir aside; continuous scripts also accept `--results_root`.
+- **Run from the repo root.** Surrogates, `FuselageActuators/{AnsysFiles,Shapes}/Test/`, and result dirs resolve relative to CWD. The exception is `simulation_study/`, which must run from inside that directory.
+- **Filenames embed `str(obs_noise)`.** The default `0.1**2` produces `0.010000000000000002…`, but `--obs_noise 0.01` produces `0.01…`. To match existing files, omit the flag or pass the exact repr (`0.010000000000000002`, `0.04000000000000001`).
+- **Grep noise.** `.history/` (VS Code Local History) and `.restore_backups/` hold hundreds of stale copies of every script. Exclude them: `grep -r --exclude-dir=.history --exclude-dir=.restore_backups …`.
+- **Git scope.** Of the `Experiments*/` folders, `.gitignore` lets through only `Experiments_constraints/**/*.pth`. Figures, CSVs, sweep JSONs and `simulation_study/` caches are tracked. The ~8 GB of continuous results (`Experiments_constraint_continuous*`, `Experiments_unconstraint_continuous`, legacy `Experiments/`, `Experiments_version1/`) exist only on the original machine. Never `git add -f` them.
+- **Broken or stale scripts:**
+  - `sweep_hyperparams.sh` and `run_quantum_experiments.sh` pass removed flags (`--initial_num_points`, `--n_constraint_init`; the current flag is `--init_num_points`).
+  - `monitor_quantum_runs.sh` hardcodes old PIDs and log paths.
+  - `run_force_range_experiments.sh` sources a nonexistent `/opt/conda/...`, so activate `quantum` first.
+  - `test_run.py`, `plot_constraint_regret.py`, `run_compare_regret.py`, `check_grid_min.py`, `classic_turbo_discrete.py`, `quantum_cbo_POF.py` and `admmbo_classic.py` point at missing dirs or old env APIs.
+- **`reset()` return order differs.** The classical env returns `(file, error_init)`; the quantum env returns `(error_init, file)`. `classic_safeset_continuous.py` and `classic_bo_unconstrained.py` unpack it backwards, so their saved `error_init` is a filename string.
+- **Forces accumulate in the env.** Scripts call `env.reset(...)` after every evaluation; keep that when adding code paths.
+
+## Environment
+
+```bash
+conda activate quantum
+```
+
+- **Versions (Python 3.8):** torch 2.0.0, botorch 0.8.5, gpytorch 1.10, scikit-learn 1.2.0, qiskit 1.2.4, qiskit-aer 0.17.2, qiskit-algorithms 0.3.1, qiskit-finance 0.4.1, qiskit-ibm-runtime 0.34.0. `requirements.txt` (qiskit 0.44 pins) is stale.
+- **Patched gpytorch:** the scripts call `RFFKernel.get_features`, which stock gpytorch 1.10 lacks. It is added in the user-site copy `~/.local/lib/python3.8/site-packages/gpytorch/kernels/rff_kernel.py`, which shadows the conda env's gpytorch. On a new machine, add this method to `RFFKernel`:
+  ```python
+  def get_features(self, x, num_dims, normalize=False):
+      if not hasattr(self, "randn_weights"):
+          self._init_weights(num_dims, self.num_samples)
+      return self._featurize(x, normalize=normalize)
+  ```
+- **`ansys.mapdl`:** the env modules import it at the top level, so it must be installed. MAPDL launches are commented out and the envs run surrogate-only.
+- **No tests or build:** there is no test suite, linter or build. Check syntax with `python -m py_compile <file>`; check behavior with a small `--query_budget` run, after backing up the output dir.
 
 ## Running Experiments
 
-All scripts must be run from the project root (surrogate `.joblib` files are loaded relative to CWD). There is no build system.
-
 ```bash
-# Activate conda environment first
-conda activate quantum
+# Discrete (21×21 grid). 5 sequential trials, seed = trial index 0–4, one GPU.
+python classic_safeset_discrete.py --query_budget 20000   # default obs_noise 0.2**2, lam0 1.0
+python quantum_safeset_discrete.py --query_budget 20000   # default obs_noise 0.1**2, lam0 0.5
 
-# Classical safe-set BO (discrete action space)
-python classic_safeset_discrete.py --query_budget 20000 --eps_max 0.04 --obs_noise 0.04 --B 3.0 --obj_ls 0.2
+# Continuous. Outer loop over 10 exp_sets (shape pairs); 5 trials in a ProcessPoolExecutor, GPU = trial % n_gpu.
+python classic_safeset_continuous.py --actuator_count 8 --force_scale 1000
+python quantum_safeset_continuous.py --actuator_count 8   # --actuator_count defaults to 6 here and in classic_acl_continuous.py
 
-# Quantum safe-set BO (discrete action space)
-python quantum_safeset_discrete.py --query_budget 20000 --eps_max 0.04 --obs_noise 0.04 --B 3.0 --obj_ls 0.2
-
-# Hyperparameter sweep — uses classic_safeset_discrete.py as faster proxy for quantum
-bash sweep_hyperparams.sh        # saves per-config logs to sweep_results/
-python sweep_hyperparams.py      # standalone Python version
-
-# Multi-seed quantum experiments (vary --init_num_points)
-bash run_quantum_experiments.sh
-
-# Monitor long-running experiment processes
-bash monitor_quantum_runs.sh
-
-# Simulated 2D synthetic benchmark (run from inside simulated_study/)
-cd simulated_study
-python compare_safe_methods_shared_init.py   # single-seed
-python multi_init_cumulative_regret.py       # multi-seed
+# Scaling studies and plots (compare scripts only read results)
+bash run_force_range_experiments.sh                       # 3 continuous methods at 500 and 200 lb
+python compare_force_range_cumulative_regret.py --exp-sets 0
+python compare_actuator_count_cumulative_regret.py        # _expset0 output = --exp-sets 0; _single = --exp-sets 0 --trials 2
 ```
 
-Common CLI parameters (flag names must match exactly — e.g. `--query_budget` not `--budget`):
-- `--query_budget`: Number of oracle queries (default: 20000)
-- `--eps_max`: Safe-set expansion threshold (default: 0.04)
-- `--obs_noise`: Observation noise variance (default: 0.04 = 0.2²)
-- `--min_shots`: Minimum Monte Carlo samples per evaluation (default: 20)
-- `--B`: UCB exploration coefficient (optimal: 3.0)
-- `--obj_ls`: Objective GP lengthscale (optimal: 0.2)
-- `--lam0`: Initial lambda for constraint weighting (default: 1.0)
-- `--t0`: Lambda decay timescale (optimal: 10.0)
-- `--lam_p`: Lambda decay power (default: 2.0)
-- `--init_num_points`: Safe warmup points for both GP models (optimal: 5)
-- `--M_features`: Number of RFF features for GP kernel (default: 400)
+- **Shared discrete flags:** `--query_budget` (oracle queries, warmup excluded; the last step may overshoot), `--eps_max 0.04`, `--min_shots 20`, `--M_features 400`, `--B 3.0`, `--obj_ls 0.2`, `--t0 10`, `--lam_p 2.0`, `--init_num_points 5`.
+- **Continuous flags:** `--max_iteration` is the oracle-query budget (default 50000). Others: `--warmup_points 200`, `--outer_seeds 10`, `--inner_trials 5`, `--B 1.0`, 256 RFF features (`--M_features`, or `--M_target` in the quantum script), and `--candidate_pool_*`.
+- **`classic_acl_discrete.py`:** `--noise_level` is σ (default 0.2), not a variance. `--seed_offset` changes seeds but not filenames.
 
 ## Architecture
 
-### Core Modules
+### Safe-set BO loop (`classic_safeset_discrete.py` / `quantum_safeset_discrete.py`)
 
-- **[utils.py](utils.py)** — `build_train_gp_with_rff`: trains a BoTorch `FixedNoiseGP` with `RFFKernel`; auto-retries with varied seeds if training R² < threshold (default 0.7). Note: this utility is not currently called by the main experiment scripts, which build their GPs inline. `sample_actions`: samples from the 8-dim active subspace, returns [N, 18] with inactive dims zeroed. `sample_kmeans_safe_subspace`: clusters safe points via K-Means for diverse initialization.
-- **[circuit_utils.py](circuit_utils.py)** — Custom IAE (`iterative_amplitude_estimation`): constructs Qiskit circuits `Q^k A |0⟩`, runs Grover iterations, returns confidence intervals via Clopper-Pearson/Chernoff bounds. `find_next_k` selects the next Grover power to minimize CI width. Oracle cost accumulates as `k × shots` per iteration.
+Both scripts build their GPs inline (`initialize_c_model`, `initialize_f_model`); neither imports GP code from `utils.py`. Each iteration:
 
-### Two Separate GP Models per Experiment
+1. **Objective model (W-GP-UCB).** φ(x) comes from `RFFKernel.get_features` (2·M features, Matérn-2.5; fixed lengthscale `--obj_ls` on dims 0/17 and 0.6931 elsewhere). The design matrix is `V_t = λI + Σ φ(xᵢ)φ(xᵢ)ᵀ/εᵢ²` with λ = 1 fixed. `W_GP_UCB_scores` returns UCB_f = mean + √β_t·σ, where β_t = (1 + B·|log t|)².
+2. **Constraint GP.** A `FixedNoiseGP` with Matérn-2.5 and fixed hyperparameters: lengthscale 0.50 on dims 0/17, 0.6931 elsewhere, outputscale 1, no MLL fit. Each step it absorbs the exact c(x) via `get_fantasy_model` (noise 1e-6). The safe set is S = {μ_c − √3·σ_c ≥ 0} (`beta_c = 3.0` is hardcoded). If S is empty, the loop takes argmax LCB.
+3. **Acquisition over S.** score = (1 − λ_t)·minmax(UCB_f) + λ_t·minmax(−|μ_c/σ_c|), where λ_t = lam0·(t0/(t0 + t))^lam_p. This is a boundary-expansion weight that decays toward pure exploitation.
+4. **Query precision.** ε_t = min(eps_max, σ_f(x)); `stage_epsilon` divides by the fixed λ = 1, not by λ_t. The env returns an ε_t-accurate estimate and its oracle cost. The loop runs until the cumulative cost reaches `--query_budget`.
+5. **Warmup.** `init_num_points` grid points are drawn from the truly safe set (1 − FI ≥ 0), with probability ∝ safety margin (`RandomState(trial)`). The same points seed both GPs. `sample_kmeans_safe_subspace` (utils.py) and `select_safe_initial_points` are unused.
 
-Each experiment script maintains two independent GPs:
-- **Constraint GP** (`c_model`): standard `FixedNoiseGP` with Matérn-2.5 kernel (no RFF), fixed lengthscales (0.6931 for inactive dims, 0.50 for active dims 0 and 17). Updated every iteration; used to compute `lcb_constraint` for safe-set membership.
-- **Objective GP** (`model_ei`): `FixedNoiseGP` with `RFFKernel` (M_features random Fourier features, Matérn-2.5). Lengthscale set via `--obj_ls`. Uses W-GP-UCB (weighted by ε) via the Gram matrix `V_t`.
+The continuous scripts use the same score over a scrambled-Sobol candidate pool in the active subspace, followed by a local refinement step. They start from 200 LHS warmup points. `utils.build_train_gp_with_rff` (1024 RFF features; callers allow up to 4 refits while train R² ≤ 0.7) runs on those points only to learn the objective lengthscale.
 
-### Environment Classes
+### Objective estimation: classical vs quantum
 
-| File | Classical/Quantum | Notes |
-|------|------------------|-------|
-| [bo_env.py](bo_env.py) | Classical | ANSYS/surrogate wrapper, no constraint |
-| [bo_env_constraints.py](bo_env_constraints.py) | Classical | Tsai-Wu constraint; `step_surrogate` returns `(obs, true_error, oracle_queries)` as torch tensors; supports `chebyshev`/`clt`/`hoeffding`/`non_monte_carlo` methods |
-| [quantum_bo_env.py](quantum_bo_env.py) | Quantum | QAE for constraint checking |
-| [quantum_bo_env_constraint.py](quantum_bo_env_constraint.py) | Quantum | Full constraint handling; `step_surrogate` returns `(obs_response, true_response, oracle_queries, c_val, empirical_variance)` where `c_val ≥ 0` is safe |
-| [FuselageActuators/FuselageActuators_env_v22.py](FuselageActuators/FuselageActuators_env_v22.py) | Classical | OpenAI Gym env wrapping live ANSYS |
+- **Classical: `bo_env_constraints.ClassicFuselageEnv.step_surrogate(action, method, device, eps)`**
+  - Averages n draws of N(−MAE, obs_noise).
+  - `method` is required; scripts use `'chebyshev'`: n = max(min(⌈var/(ε²δ)⌉, 29999), min_shots), δ = 0.05. `clt`, `hoeffding` and `non_monte_carlo` also exist.
+  - Returns `(obs, true_mae, n)`.
+  - The draws use unseeded `random.gauss`, so classical runs aren't bit-reproducible.
+  - This env has no Tsai-Wu code; the classical scripts load `surrogate_tsaiwu.joblib` themselves.
+- **Quantum: `quantum_bo_env_constraint.QuantumFuselageEnv.step_surrogate(action, eps, device)`**
+  - Encodes N(−MAE(x), obs_noise) in a 6-qubit `qiskit_finance` `NormalDistribution` (whose `sigma` argument is a variance), truncated at ±3√obs_noise, followed by an identity `LinearAmplitudeFunction`.
+  - Runs IAE at amplitude precision clip(ε/(3σ), 1e-6, 0.5), with α = 0.05.
+  - Oracle cost = Σ shots × k over the IAE rounds.
+  - Returns `(obs, true_mae, oracle_queries, c_val, empirical_variance)`.
+  - **Default path:** `qiskit_algorithms.IterativeAmplitudeEstimation` with the V1 `qiskit.primitives.Sampler(seed=0)`, so the estimate is deterministic for a given (x, ε).
+  - **With `backend`:** uses the custom IAE in `circuit_utils.py`. It builds Q^k A|0⟩ circuits by hand, transpiles each round, and submits via `qiskit_ibm_runtime.SamplerV2(mode=backend)`. `find_next_k` picks the next Grover power, and CIs are Clopper-Pearson.
+- **Saved values:** `response` is the noisy −MAE/error_init (error_init is the zero-force MAE), and the BO maximizes it. `true_response` is the raw MAE.
+- **Legacy envs:** `bo_env.py` and `quantum_bo_env.py` are used only by TuRBO, `quantum_bo.py` and `quantum_bo_active.py`. The live-ANSYS Gym env is `FuselageActuators/FuselageActuators_env_v22.py`; `fuselageENV.py` is an identical copy.
 
-ANSYS calls are commented out in all env classes by default; surrogate inference is used instead.
+### Script map
 
-### Experiment Scripts
+| Role | Discrete (grid) | Continuous |
+|---|---|---|
+| Classical safe-set cUCB | `classic_safeset_discrete.py` | `classic_safeset_continuous.py` |
+| Quantum safe-set cUCB | `quantum_safeset_discrete.py` (IBM HW: `quantum_safeset_discrete_real.py`) | `quantum_safeset_continuous.py` |
+| BO-ACL baseline | `classic_acl_discrete.py` | `classic_acl_continuous.py` |
+| Unconstrained, classical | `classic_bo_unconstrained_discrete.py` | `classic_bo_unconstrained.py` |
+| Unconstrained, quantum | `quantum_bo_discrete.py` | `quantum_bo_unconstrained.py` |
 
-**Classical baselines:** `classic_safeset_discrete.py`, `classic_safeset_continuous.py`, `classic_acl_discrete.py`, `classic_acl_continuous.py`, `classic_bo_unconstrained.py`, `classic_turbo_discrete.py`, `classic_POF_discrete.py`, `admmbo_classic.py`
+The unconstrained scripts share seeds, shape lists and the safe init with their safe-set counterparts, so the curves are comparable. `quantum_bo.py` is legacy and not aligned. The TuRBO, POF and ADMM scripts are legacy.
 
-**Quantum variants:** `quantum_safeset_discrete.py`, `quantum_safeset_continuous.py`, `quantum_safeset_discrete_real.py` (IBM real hardware), `quantum_bo_discrete.py`, `quantum_turbo_discrete.py`, `quantum_bo_active.py`
+### Results layout
 
-**Unconstrained baselines (shared-init):** `classic_bo_unconstrained.py`, `classic_bo_unconstrained_discrete.py`, `quantum_bo_unconstrained.py`, `quantum_bo.py`. Each is deliberately aligned to its safeset counterpart (same env `bo_env_constraints.ClassicFuselageEnv`, same objective, same initial points) so constrained vs. unconstrained curves are directly comparable. Results land in `Experiments_unconstraint_continuous/` (subdirs `Classic_Unconstrained_*` / `Quantum_Unconstrained_*`).
+- **Discrete (tracked):** `Experiments_constraints/<Method>/exp_set_1/{obs_noise}{prefix}training_data_{trial}_.pth`.
+  - Methods: `Classic_Discrete_cUCB`, `Quantum_Discrete_cUCB`, `Quantum_Discrete_cUCB_Real`, `Classic_ACL_Discrete`, `Classic_Discrete_Unconstrained`, `Quantum_Discrete_Unconstrained`.
+  - Prefixes: none (classical), `quan_` (quantum), `acl_`.
+- **Continuous (local only):** `Experiments_constraint_continuous[_actuators_N][_force_F]/<Method>_<count>_<eta>_<lam>_<B>_[multi_gpu_]noise_<var>/exp_set_<k>/`.
+  - `exp_set_k` is the k-th (init → target) shape pair: DP52→53, 50→53, 49→57, 45→53, 45→58, 48→53, 43→53, 53→55, 60→44, 54→53.
+  - The existing 8-actuator dirs in `Experiments_constraint_continuous/` use legacy names without the count (`Classic_SafeSet_1.0_…`, `Quantum_EXP_10_…`). Re-running current code creates `*_8_*` dirs beside them, and the compare scripts would then pool both.
+  - The unconstrained runs mirror this layout under `Experiments_unconstraint_continuous[...]`.
+- **Discrete safe-set `.pth` schema:**
+  - `actions` [N,18]; `response` and `true_response` [N,1]; `queries` [N,1] int64; `uncertainty` (a list of ε_t).
+  - `active_records` has 35 per-step diagnostics, e.g. `c_val`, `FI`, `mu_c`/`sig_c`/`lcb_c`, `safe_mask_sum_*`, `eps`.
+  - `metadata` holds `query_budget`, `trial`, `seed`, `num_active_steps`, `final_total_budget`.
+  - Warmup rows aren't saved.
+- **ACL and continuous `.pth` files:** no `active_records` or `metadata`; they add `error_init` (and `constraint_margin` for ACL). ACL files include the warmup rows, with queries = 0.
+- **Cumulative regret convention:** each row is repeated `queries` times, and regret = Σ|f* − true_response|.
+  - Discrete: f* = 0.07159.
+  - Continuous compare scripts: f* = `--f-opt` (default 0), so their "regret" is cumulative MAE.
 
-**Force-range study:** the continuous scripts accept `--actuator_count` (default 8) and `--force_scale` (default 1000.0, in lb). `run_force_range_experiments.sh` runs the 3 continuous methods sequentially at force scales 500 and 200 (1000 is the baseline already in `Experiments_constraint_continuous`), logging to `force_range_logs/`. `compare_force_range_cumulative_regret.py` plots one panel per force range with root mapping 200→`Experiments_constraint_continuous_force_200`, 500→`_force_500`, 1000→`Experiments_constraint_continuous`. Outputs `force_range_cumulative_regret_noise_0p01.{png,csv}`.
+### Analysis
 
-**Shape-gap reduction plots:** `extract_shape_gap_force_configs.py` extracts per-actuator force configs; `plot_shape_gap_reduction_panels.py` and `plot_classic_quantum_shape_gap_comparison.py` render the resulting `shape_gap_reduction_extract` CSVs (found under `exp_set_*/` result subdirs).
+- `analyze_discrete.ipynb`: the discrete analysis; metrics are defined in `analyze_discrete_README.md`.
+- `analyze.ipynb`: the continuous analysis; results in `result_README.md`.
+- `report_violation_rate.py`: recomputes violation rates for `Experiments_constraints/` from the Tsai-Wu surrogate.
+- `print_minimums.py` reads only `Experiments_constraint_continuous/`.
+- The READMEs' numbers are partly stale because runs were overwritten later; recompute from the data.
 
-**Actuator-count scaling study:** `compare_actuator_count_cumulative_regret.py` aggregates cumulative regret across actuator counts 4/6/8 (roots `Experiments_constraint_continuous_actuators_4`, `_6`, and `Experiments_constraint_continuous` for count 8). Regret = `cumsum(abs(F_OPT - true_response))` with rows expanded by the per-step `queries` count; curves are then averaged (± stderr) across trials/exp_sets. Outputs `actuator_count_cumulative_regret_noise_0p01.{png,csv}`. The `--noise` flag is an observation *variance* (default `0.1**2 = 0.01`); the physical σ shown in plots is its square root.
+### Simulation study (`simulation_study/`)
 
-**Analysis tools:**
-- `test_run.py` — analysis script for **continuous** experiments; loads `.pth` data from `Experiments_constraint_continuous/`, computes per-seed minimum, cumulative regret, and safe-rate statistics.
-- `analyze_discrete.ipynb` — primary analysis notebook for discrete experiments; loads from `Experiments_constraints/`; see [analyze_discrete_README.md](analyze_discrete_README.md) for full metric definitions and key results.
-- `print_minimums.py`, `print_mins_script.py` — quick scripts to print best values found per seed.
-- `report_violation_rate.py` — recomputes constraint violation rate strictly via `surrogate_tsaiwu.joblib`.
-- `plot_constraint_regret.py` — plots running minimum and cumulative regret figures.
-- Other notebooks: `analyze.ipynb` (constrained continuous Q/C-Safe BO vs. BO-ACL — MAE, safe-rate, cumulative regret; results summarized in [result_README.md](result_README.md)), `compare_cumulative_regret.ipynb`, `analyze_constraint_continuous_regret.ipynb`
+This is a self-contained 2D benchmark (Paper Simulation 2). Run it from inside the directory.
 
-### Simulated Study (`simulated_study/`)
+- **Task:** minimize g(x) = x₁² − sin(4x₂²) subject to x₂ − x₁² ≥ ξ (ξ = 0), on a 25×25 grid over [−1, 1]².
+- **Methods:**
+  - `safe_set_bo.py`: classical cUCB.
+  - `quantum_safe_bo.py`: `qiskit_algorithms` IAE.
+  - `quantum_safe_bo_real.py`: IBM hardware; it imports the root `circuit_utils.py` via `sys.path`.
+  - `unconstrained_bo.py` and `ACL_paper.py`: baselines.
+  - `experiment_env.py`: builds the grid and functions.
+- **Configuration:** module-level constants at the top of each driver (`SEED`, `N_INIT`, `ORACLE_BUDGET=500`, `OBJ_NOISE=0.3` std, `BETA_C`, `LAM0`, …); there are no CLI flags.
+- **Drivers:**
+  - `compare_safe_methods_shared_init.py`: single seed; it always tries IBM hardware.
+  - `multi_init_cumulative_regret.py`: seeds 5–9, with `INCLUDE_REAL_QUANTUM = True`. It resumes from `multi_init_checkpoint.pkl` and skips finished runs.
+- **Replot instead of re-running:**
+  - `replot_multi_init_from_pkl.py` rebuilds the table and figure from the checkpoint.
+  - `replot_from_pkl.py` and `replot_from_txt.py` rebuild `comparison_regret.png` from `results_<ts>.{pkl,txt}`; the `.txt` embeds the regret curves.
+- **Headline numbers:** read `multi_init_stats.txt`. The README's tables, seed and path (`simulated_study/`) are older.
+- **Regret conventions:** quantum runs store `cumu_regret_expanded` (per oracle query) and classical runs store `queried_cumu_regret_hist`; both are padded or trimmed to `ORACLE_BUDGET`. Simple regret is noise-free: |global safe optimum − best true objective among feasible queried points|.
 
-A self-contained 2D synthetic benchmark (Paper Simulation 2) that validates the algorithmic approach on an analytic environment before the full fuselage application. Must be run from inside `simulated_study/`.
+### IBM hardware
 
-**Objective:** `g(x) = x₁² − sin(4x₂²)` on a 25×25 grid over `[−1, 1]²`
+- **Default account:** every script calls `QiskitRuntimeService()` with no args, which loads the default saved account. That account may have no QPUs, and then `least_busy` raises `QiskitBackendNotFoundError`. Load a QPU-bearing account explicitly, e.g. `QiskitRuntimeService(name="CS102")`.
+- **Channels:** qiskit-ibm-runtime 0.34 accepts only `channel` ∈ {`ibm_cloud`, `ibm_quantum`}, so saved `ibm_quantum_platform` accounts fail to load.
+- **Silent fallback:** if the backend lookup fails, `quantum_safeset_discrete_real.py` quietly runs the simulator but still writes to `Quantum_Discrete_cUCB_Real/`. Check its log for the selected backend. Its defaults also differ: obs_noise 0.04, min_shots 100, lam0 1.0.
 
-**Constraint:** `c(x) = x₂ − x₁²` (safe if ≥ 0)
+## Hyperparameters
 
-| Module | Method |
-|--------|--------|
-| `safe_set_bo.py` | Classical GP safe-set cUCB |
-| `quantum_safe_bo.py` | IAE-based quantum safe BO (simulated) |
-| `quantum_safe_bo_real.py` | Quantum safe BO on IBM real hardware |
-| `unconstrained_bo.py` | Standard UCB-BO (no constraint) |
-| `ACL_paper.py` | Active Constraint Learning BO |
-
-Key result: Quantum Safe BO reduces cumulative regret by ~42% vs classical Safe BO while maintaining 100% safety; BO-ACL violates safety on ~31.5% of queries.
-
-**Driver / replot scripts (prefer these to re-running experiments):** The multi-seed benchmark is expensive, so results are cached and figures/tables are regenerated from the cache rather than re-simulated:
-- `multi_init_cumulative_regret.py` — canonical multi-seed (seeds 5–9) driver. Resumes from `multi_init_checkpoint.pkl`, skipping already-completed runs; writes `multi_init_regret_mean_std.png` and `multi_init_stats.txt`. Set `INCLUDE_REAL_QUANTUM` to toggle the IBM-hardware method.
-- `replot_multi_init_from_pkl.py` — re-aggregates the summary table/figure purely from `multi_init_checkpoint.pkl` (no simulation, no IBM access). Use this to change how metrics are reported.
-- `replot_from_pkl.py` / `replot_from_txt.py` — regenerate `comparison_regret.png` (single-seed) from a `results_*.pkl` or its `results_*.txt` sidecar. The `.txt` sidecar embeds the raw cumulative-regret curves, so it is a self-sufficient plotting source.
-
-Result artifacts come in matched pairs — `results_<ts>.pkl` (raw arrays for reloading) and `results_<ts>.txt` (human-readable summary table + embedded regret curves). Regret conventions: quantum methods store `cumu_regret_expanded` (per-oracle-query), classical methods store `queried_cumu_regret_hist`; both are padded/trimmed to `ORACLE_BUDGET` before aggregation. "Simple regret" is computed noise-free as `|global_safe_opt - best ground-truth objective over feasible queried points|`.
-
-**IBM real-hardware access:** `QiskitRuntimeService()` with no args loads the default saved account, which may have no QPUs attached (→ `QiskitBackendNotFoundError` from `least_busy`). Load a QPU-bearing account explicitly, e.g. `QiskitRuntimeService(name="CS102")`. The installed `qiskit-ibm-runtime` only accepts `channel` in `{ibm_cloud, ibm_quantum}`; saved `ibm_quantum_platform` accounts will fail to load.
-
-### Data and Models
-
-- **Surrogate models** are loaded from the project root via relative paths:
-  - `surrogate_likeDu_v22.joblib` — linear model (`.coef_` extracts [18,] weights) for objective (shape error)
-  - `surrogate_tsaiwu.joblib` — Tsai-Wu failure criterion constraint; full sklearn model
-  - A copy of `surrogate_likeDu_v22.joblib` also lives in `FuselageActuators/Surrogates/`
-- **Shape files:** `FuselageActuators/Shapes/{Train,Test,Benchmark}/` — `.npy` displacement arrays and `.txt` ANSYS input files
-- **Results directories:**
-  - `Experiments/` — older unconstrained results (`Classic_TurBO_Discrete/`, `Quantum_Discrete_cUCB/`, etc.)
-  - `Experiments_constraints/` — current constrained results (`Classic_Discrete_cUCB/`, `Quantum_Discrete_cUCB/`, `Classic_ACL_Discrete/`, etc.); files named `{noise}training_data_{trial}_.pth` or `{noise}quan_training_data_{trial}_.pth`
-  - `Experiments_constraint_continuous/` — continuous-space constrained results (also serves as the 8-actuator root for the scaling study)
-  - `Experiments_constraint_continuous_actuators_4/`, `_6/` — same, restricted to 4 and 6 active actuators; subdirs encode `<method>_<count>_<params>_noise_<variance>`
-  - `Experiments_constraint_continuous_force_200/`, `_force_500/` — continuous constrained results at 200 lb / 500 lb force scales (1000 lb baseline lives in `Experiments_constraint_continuous/`)
-  - `Experiments_unconstraint_continuous/` — unconstrained-baseline results (`Classic_Unconstrained_*`, `Quantum_Unconstrained_*`)
-
-**Saved `.pth` file schema:**
-```python
-{
-  'actions': Tensor[N, 18],
-  'response': Tensor[N, 1],        # noisy observation
-  'true_response': Tensor[N, 1],   # ground truth
-  'queries': Tensor[N],            # oracle queries per step
-  'uncertainty': list[float],      # epsilon_t per step
-  'active_records': list[dict],    # per-step metadata
-  'metadata': {
-    'query_budget': int, 'trial': int, 'seed': int,
-    'num_active_steps': int, 'final_total_budget': int
-  }
-}
-```
-
-### Key Design Patterns
-
-1. **Safe-set expansion**: Safe set S ⊆ grid grows as GP constraint uncertainty narrows. Each iteration computes `epsilon_t = min(eps_max, sqrt(var(x) / lambda_t))` where `lambda_t` decays via `lam0 * (t0 / (t0 + stage))^lam_p`.
-2. **QAE replaces GP constraint bounds**: Instead of GP posterior CI over constraint, a `NormalDistribution` circuit encodes the GP predictive distribution; IAE estimates P(constraint satisfied) with quantum speedup. The CI from IAE substitutes for classical `lcb_constraint`.
-3. **Acquisition**: cUCB = `minmax_norm(ucb_obj) - lambda_t * minmax_norm(lcb_constraint)` over the current safe set.
-4. **GP training**: The constraint GP uses standard BoTorch `FixedNoiseGP` with Matérn-2.5 and fixed lengthscales. The objective GP uses `RFFKernel` (random Fourier features approximation of Matérn-2.5). The Gram matrix `V_t = Σ (1/ε_i) Φ(xᵢ)Φ(xᵢ)ᵀ + λI` accumulates RFF features for `W_GP_UCB_scores()`.
-5. **Multi-seed runs**: `concurrent.futures.ProcessPoolExecutor` or sequential loops with `--seed_offset` in ACL scripts; `run_quantum_experiments.sh` loops sequentially.
-6. **Inline GP construction**: The main experiment scripts (`classic_safeset_discrete.py`, `quantum_safeset_discrete.py`) build and update GPs directly via `initialize_model` / `initialize_c_model` defined at the top of each file, rather than importing from `utils.py`.
-
-## Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Key pinned versions: `qiskit==0.44`, `qiskit_aer==0.12.0`, `qiskit_finance==0.3.4`, `qiskit-algorithms==0.3.0`, `qiskit_ibmq_provider==0.20.2`. BoTorch/PyTorch/scikit-learn are assumed pre-installed in the `quantum` conda environment.
-
-## Optimal Hyperparameters
-
-From sweep results in [hyperparameter_sweep_results.md](hyperparameter_sweep_results.md):
-
-| Parameter | Optimal | Why |
-|-----------|---------|-----|
-| `init_num_points` | 5 | Eliminates GP cold-start; 1 point → 40% convergence, 5 points → 100% |
-| `B` | 3.0 | UCB exploration; B=1.0 stalls safe set at ~45% of grid |
-| `t0` | 10.0 | Slow lambda decay gives more time for boundary expansion |
-| `obj_ls` | 0.2 | Sharp localized response; slight edge over 0.5 early in search |
-| `lam_p` | 2.0 | Quadratic decay toward pure exploitation |
-
-Achieves MAE ~0.0716 (theoretical minimum) with 100% convergence across all seeds and noise levels.
+- **Discrete defaults are the tuned values:** B 3.0, obj_ls 0.2, t0 10, lam_p 2.0, init_num_points 5, M 400, eps_max 0.04.
+  - lam0 is 0.5 in the quantum script, the winner of `sweep_quantum_safeset_exact.py` (see `quantum_safeset_exact_sweep_best.json`), and 1.0 in the classical script. The published discrete comparison therefore used different lam0 values.
+- **Classical proxy sweep:** `sweep_hyperparams.py` writes `sweep_results.json`, summarized in `hyperparameter_sweep_results.md`. Findings:
+  - With 1 warmup point, only 2–3 of 5 seeds converge; 3 or more points reach 5/5.
+  - B = 1 stalls safe-set growth (about 45% of the grid explored, versus about 49% at B = 3).
+  - obj_ls 0.2 versus 0.5 made no measurable difference.
+  - "Converged" there means best MAE ≤ 0.08.
