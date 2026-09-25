@@ -12,6 +12,8 @@ Superseded, broken, or one-off files kept for reference. Nothing here is maintai
 | `optimize_regret.py`, `sweep_regret_target.py`, `check_qae_discretization.py`, `compare_queries.py`, `test_gp.py`, `timeout.py` | One-off exploration and debugging scripts |
 | `visualize.ipynb`, `test_qc.ipynb`, `check_data.ipynb`, `test_func.ipynb`, `perfectPos.{csv,npy}` | Old notebooks (pre-1.0 Qiskit APIs, live-ANSYS setup, missing result folders) and the data only they use |
 | `surro_classic.joblib` | Unused duplicate of `surrogate_likeDu_v22.joblib` |
+| `compare_cumulative_regret.ipynb` | Discrete cumulative-regret notebook that reads `exp_set_0` folders that no longer exist; superseded by `analysis/analyze_discrete.ipynb` |
+| `cleanup_tmp.py`, `compare_safe_methods_lib.py` | From `simulation_study/`: a one-off scratch-directory cleanup and a helper library that nothing imports |
 
 To try a script, run it from the repository root so data paths resolve, and put the root on the import path:
 

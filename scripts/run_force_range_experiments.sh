@@ -4,8 +4,8 @@
 # Runs the 3 methods sequentially per force scale (each script uses all GPUs).
 set -u
 
-cd "$(dirname "$0")"
-source /opt/conda/etc/profile.d/conda.sh
+cd "$(dirname "$0")/.."   # run from the repository root
+source "$(conda info --base 2>/dev/null || echo "$HOME/anaconda3")/etc/profile.d/conda.sh"
 conda activate quantum
 
 LOGDIR="force_range_logs"

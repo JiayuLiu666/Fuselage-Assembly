@@ -21,6 +21,7 @@ import botorch.settings as botorch_settings
 
 warnings.filterwarnings("ignore")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SCRIPT_DIR)   # surrogates, shapes and decks live at the repository root
 NOISE_FREE_VARIANCE = 1e-6
 
 # Helper for RFF feature extraction (avoids monkey-patching issues)
@@ -154,12 +155,12 @@ def evaluate_noisy(surrogate_T, initPos, targetPos, error_init, action, obs_nois
 
 def load_surrogate_data(input_file):
     """Load the FEM surrogate data (matching ClassicFuselageEnv.reset)."""
-    surrogate_model = load(os.path.join(SCRIPT_DIR, "surrogate_likeDu_v22.joblib"))
+    surrogate_model = load(os.path.join(REPO_ROOT, "surrogate_likeDu_v22.joblib"))
     surrogate_T = surrogate_model.coef_.T  # same as env.surrogate.T
 
     # Load initPos from the .npy matching the input file name
     file_base = os.path.basename(input_file).split(".")[0]
-    shapes_dir = os.path.join(SCRIPT_DIR, "FuselageActuators", "Shapes", "Test")
+    shapes_dir = os.path.join(REPO_ROOT, "FuselageActuators", "Shapes", "Test")
     initPos = np.load(os.path.join(shapes_dir, file_base + ".npy"))
 
     # Target: SolutionInputDP53.npy (same default as env)
@@ -353,11 +354,11 @@ def main():
     botorch_settings.debug._set_state(True)
 
     # Load models
-    tsai_wu_path = os.path.join(SCRIPT_DIR, "surrogate_tsaiwu.joblib")
+    tsai_wu_path = os.path.join(REPO_ROOT, "surrogate_tsaiwu.joblib")
     tsai_wu_model = load(tsai_wu_path)
     print(f"Loaded Tsai-Wu model from {tsai_wu_path}")
 
-    input_file = os.path.join(SCRIPT_DIR, "FuselageActuators", "AnsysFiles", "Test",
+    input_file = os.path.join(REPO_ROOT, "FuselageActuators", "AnsysFiles", "Test",
                               "SolutionInputDP52.inp")
     surrogate_T, initPos, targetPos, error_init = load_surrogate_data(input_file)
     print(f"Loaded surrogate data, error_init={error_init:.4f}")

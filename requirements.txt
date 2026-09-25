@@ -1,9 +1,17 @@
-# pandas==1.5.2
-qiskit==0.44
-qiskit_aer==0.12.0
-qiskit_finance==0.3.4
-qiskit-algorithms==0.3.0
-qiskit_ibmq_provider==0.20.2
-qiskit_terra
-# scikit_learn==1.2.0
-# scipy==1.10.1
+# Working environment for this repository: conda env "quantum", Python 3.8.
+# gpytorch additionally needs the RFFKernel.get_features patch described in README.md / CLAUDE.md.
+torch==2.0.0
+botorch==0.8.5
+gpytorch==1.10
+scikit-learn==1.2.0
+numpy==1.23.4
+scipy==1.9.3
+joblib==1.4.2
+pandas==1.5.2
+matplotlib==3.7.5
+qiskit==1.2.4
+qiskit-aer==0.17.2
+qiskit-algorithms==0.3.1
+qiskit-finance==0.4.1
+qiskit-ibm-runtime==0.34.0
+ansys-mapdl-core==0.67.0

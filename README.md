@@ -8,12 +8,14 @@ Research code comparing classical safe-set Bayesian optimization (BO) with a qua
 |---|---|
 | `*_safeset_*.py`, `*_acl_*.py`, `*_bo_unconstrained*.py`, `quantum_bo_discrete.py` | Experiment scripts: classical and quantum safe-set BO, the BO-ACL baseline, and unconstrained baselines |
 | `bo_env_constraints.py`, `quantum_bo_env_constraint.py`, `circuit_utils.py`, `utils.py` | Surrogate environments, custom iterative amplitude estimation, and shared GP/sampling helpers |
-| `surrogate_likeDu_v22.joblib`, `surrogate_tsaiwu.joblib`, `Surrogate modeling/` | Linear shape surrogate, Tsai-Wu constraint surrogate, and surrogate training data |
+| `surrogate_likeDu_v22.joblib`, `surrogate_tsaiwu.joblib`, `surrogate_modeling/` | Linear shape surrogate, Tsai-Wu constraint surrogate, and surrogate training data |
 | `FuselageActuators/` | ANSYS input decks (`AnsysFiles/`), displacement shapes (`Shapes/`), and a live-ANSYS Gym environment |
-| `Experiments_constraints/` | Discrete-grid results (`.pth`) used by `analyze_discrete.ipynb` |
+| `Experiments_constraints/` | Discrete-grid results (`.pth`) used by `analysis/analyze_discrete.ipynb` |
 | `simulation_study/` | 2D synthetic benchmark with cached results and figures |
-| `*.ipynb`, `compare_*.py`, `plot_*.py`, `report_violation_rate.py` | Analysis notebooks and plotting scripts |
-| `sweep_*.py`, `*sweep*.json` | Hyperparameter sweeps and their results |
+| `analysis/` | Analysis notebooks and the compare, plot, extract and report scripts (run the scripts from the repository root) |
+| `sweeps/` | Hyperparameter sweeps and their JSON results |
+| `docs/` | Write-ups of the discrete, continuous and sweep results |
+| `scripts/` | Shell driver for the force-range experiments |
 | `figures/` | Generated plots and the CSVs behind them |
 | `legacy/` | Superseded, broken, or one-off scripts, kept for reference (see `legacy/README.md`) |
 
@@ -28,7 +30,7 @@ The code was developed in a conda env named `quantum` with:
 - qiskit 1.2.4, qiskit-aer 0.17.2, qiskit-algorithms 0.3.1, qiskit-finance 0.4.1, qiskit-ibm-runtime 0.34.0
 - `ansys-mapdl-core`: imported at module level, but ANSYS itself isn't needed for surrogate runs
 
-`requirements.txt` is out of date.
+`requirements.txt` pins these versions.
 
 The code calls `gpytorch.kernels.RFFKernel.get_features`, which stock gpytorch 1.10 lacks. Add this method to `RFFKernel` in `gpytorch/kernels/rff_kernel.py`:
 
@@ -62,4 +64,4 @@ The real-hardware scripts use `qiskit_ibm_runtime.QiskitRuntimeService()`, which
 ## Further reading
 
 - `CLAUDE.md`: algorithm details, script map, results layout, and known issues
-- `analyze_discrete_README.md`, `result_README.md`, `simulation_study/README.md`: descriptions of the analyses
+- `docs/analyze_discrete_README.md`, `docs/result_README.md`, `docs/hyperparameter_sweep_results.md`, `simulation_study/README.md`: descriptions of the analyses

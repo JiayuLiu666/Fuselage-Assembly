@@ -11,7 +11,8 @@ import torch
 from joblib import load
 
 
-ROOT = Path(__file__).resolve().parent
+SWEEP_DIR = Path(__file__).resolve().parent
+ROOT = SWEEP_DIR.parent   # repository root: data, scripts and results live there
 EXP_DIR = ROOT / "Experiments_constraints" / "Quantum_Discrete_cUCB" / "exp_set_1"
 
 
@@ -184,7 +185,7 @@ def main():
             "trials": trials,
         }
         results.append(row)
-        with (ROOT / "quantum_safeset_exact_sweep_results.json").open("w") as f:
+        with (SWEEP_DIR / "quantum_safeset_exact_sweep_results.json").open("w") as f:
             json.dump(results, f, indent=2)
         print(
             f"  max simple regret={summary['max_simple_regret']:.12g}, "
@@ -201,7 +202,7 @@ def main():
             r["summary"]["avg_steps"],
         ),
     )
-    with (ROOT / "quantum_safeset_exact_sweep_best.json").open("w") as f:
+    with (SWEEP_DIR / "quantum_safeset_exact_sweep_best.json").open("w") as f:
         json.dump(ranked[0], f, indent=2)
 
     print("\nRanked configs:")
