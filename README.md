@@ -1,4 +1,4 @@
-# Quantum-Enhanced Safe Bayesian Optimization for Fuselage Shape Adjustment
+# Quantum Safe-Set Bayesian Optimization for Quality Improvement in Fuselage Assembly
 
 **Paper:** [Quantum Safe-Set Bayesian Optimization for Quality Improvement in Fuselage Assembly](https://arxiv.org/abs/2511.22090), Jiayu Liu, Chong Liu, Trevor Rhone and Yinan Wang (arXiv:2511.22090).
 
